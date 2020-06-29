@@ -8,13 +8,13 @@
 
 using namespace std;
 void miope(int& bestTruck, int& bestFarm, int capacity[], int position[], int production[], int **cost, float minPrize, int nTrucks, int nFarms, float avg, float p, int actualPrize){
-    float maxValue = -10000;
-	float value = 0;
-	for (int i = 1; i < nTrucks; i++)
-	{
-		for (int j = 1; j < nFarms; j++)
-		{
-			if (cost[position[i]][j] != 0){
+ float maxValue = -10000;
+ float value = 0;
+ for (int i = 1; i < nTrucks; i++)
+ {
+  for (int j = 1; j < nFarms; j++)
+  {
+   if (cost[position[i]][j] != 0){
                 if (production[j] > 0)
                 {
                     if ((capacity[i] - production[j] - avg*p) > 0)
@@ -52,32 +52,24 @@ void miope(int& bestTruck, int& bestFarm, int capacity[], int position[], int pr
                         }
                     }
                 }
-                
-                
-			}
-		}
-	}
+   }
+  }
+ }
 }
 
 int main()
 {
-    float p;
-    int param;
-    for (param = 0; param < 11; param++)
-    {
-        p = param * 0.1;
-
         ofstream summary;
-        summary.open ("outputs/summary" + to_string(param) + ".txt");
+        summary.open("outputs/summary.txt");
         int in;
-        for (in = 1; in < 23; in++){
+        for (in = 1; in < 7; in++){
             // Record start time
             auto start = std::chrono::high_resolution_clock::now();
 
             ifstream inFile;
             string instance;
-            instance = "instancia" + to_string(in);
-            inFile.open("MC/Instances/" + instance + ".dat");
+            instance = "5clusters.dat." + to_string(in);
+            inFile.open("MCWSB/Instances/" + instance + ".dat");
             string line;
             string word;
             
@@ -246,8 +238,6 @@ int main()
 
             inFile.close();
 
-            // Sets de rutas dinamicos: vector de vectores? arreglo de vectores?
-
             // Crear 3 vectores dinamicos para generar las rutas
 
             vector <int> routes[nTrucks];
@@ -271,7 +261,7 @@ int main()
                 }
                 routes[bestTruck].push_back(bestFarm);
                 position[bestTruck] = bestFarm;
-                capacity[bestTruck]	= capacity[bestTruck] - production[bestFarm];
+                capacity[bestTruck] = capacity[bestTruck] - production[bestFarm];
                 load[bestTruck] = load[bestTruck] + production[bestFarm];
                 actualPrize = actualPrize + production[bestFarm];
                 production[bestFarm] = 0;
@@ -315,7 +305,7 @@ int main()
                         {
                             costRoutes = costRoutes + cost[routes[i][j]][routes[i][j + 1]];
                             distance = distance + cost[routes[i][j]][routes[i][j + 1]];
-                        }	
+                        } 
                     }
                 }
                 if (routes[i].size() != 0)
@@ -335,7 +325,7 @@ int main()
             for (i = 1; i < nTrucks; i++)
             {
                 if (routes[i].size() != 0)
-                {	
+                { 
                     // cout << "Truck " << i << " ";
                     outFile << "Truck " << i << " ";
                     for (j = 0; j < int(routes[i].size() - 1); j++)
@@ -351,13 +341,13 @@ int main()
                             {
                                 // cout << origin << " " << routes[i][j + 1] << " " << load[i] << endl;
                                 outFile << origin << " " << routes[i][j + 1] << " " << load[i] << endl;
-                            }	
+                            } 
                         }
                         else
                         {
                             // cout << routes[i][j] << "-";
                             outFile << routes[i][j] << "-";
-                        }	
+                        } 
                     }
                 }
             }
@@ -372,5 +362,5 @@ int main()
         }
         summary.close();
     }
-	return 0;
+ return 0;
 }
