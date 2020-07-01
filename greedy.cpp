@@ -14,7 +14,7 @@ using namespace std;
 #define srand48(x) srand((int)(x))
 #define drand48() ((double)rand()/RAND_MAX)
 
-int Seed;
+int Seed = 0;
 int randLength = 5;
 
 void Capture_Params(int argc, char **argv){
@@ -48,12 +48,11 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
     randFarm = 0;
     return;
   }
-
   // Obtener las granjas posibles y sus beneficios
   int farmValues[available], availableFarms[available];
   for (j = 0; j < available; j++)
   {
-    if (capacity[T] >= production[iQualityFarms[i][j]])
+    if ((production[iQualityFarms[i][j]] > 0) && (capacity[T] >= production[iQualityFarms[i][j]]))
     {
       farmValues[realAvailable] = production[iQualityFarms[i][j]] * profit[i] - cost[position[T]][iQualityFarms[i][j]];
       availableFarms[realAvailable] = iQualityFarms[i][j];
@@ -61,13 +60,20 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
     }
   }
 
+  /* cout << "Calidad " << i << ", camion" << T << ", hay " << realAvailable << " granjas disponibles, las cuales son: ";
+  for (j = 0; j < realAvailable; j++)
+  {
+    cout << availableFarms[j] << " ";
+  }
+  cout << "\n"; */
+  
   // Este camion no puede llevar mas carga
   if (realAvailable == 0)
   {
     randFarm = 0;
     return;
   }
-  
+
   // Generar las mejores randLenght granjas
   int l = (realAvailable < randLenght) ? realAvailable : randLenght; 
   int maxValues[l], pickFarm[l];
@@ -89,23 +95,23 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
         minValue = maxValues[k];
         minPosition = k;
       }
-      // Si mi farmValues[j] es mayor que el valor minimo, lo reemplazo y guardo la granja en pickFarm
-      if (farmValues[j] > minValue)
-      {
-        maxValues[minPosition] = farmValues[j];
-        pickFarm[minPosition] = availableFarms[j];
-      }
+    }
+    // Si mi farmValues[j] es mayor que el valor minimo, lo reemplazo y guardo la granja en pickFarm
+    if (farmValues[j] > minValue)
+    {
+      maxValues[minPosition] = farmValues[j];
+      pickFarm[minPosition] = availableFarms[j];
     }
   }
   // Tomo una granja aleatoria en pickFarm para retornarla
-  randFarm = pickFarm[int_rand(0, realAvailable)];
+  randFarm = pickFarm[int_rand(0, l)];
 }
 
-int main(int argc, char** argv)
+// int argc, char** argv
+// Capture_Params(argc,argv); */
+int main()
 {
-  Capture_Params(argc,argv);
   srand48(Seed);
-
   ofstream summary;
   summary.open("outputs/summary.txt");
   int in;
@@ -242,7 +248,7 @@ int main(int argc, char** argv)
     std::getline(inFile, line);
     // Salto producción de planta 0
     std::getline(inFile, line);
-    
+
     // Obtener producciones
     i = 1;
     inFile >> word;
@@ -258,7 +264,7 @@ int main(int argc, char** argv)
       inFile >> word;
       i = i + 1;
     }
-    
+
     // LLegar hasta #costos :
     while (inFile >> word)
     {
@@ -299,7 +305,7 @@ int main(int argc, char** argv)
 
     vector <int> iQualityFarms[nQualities];
 
-    for (i = 0; i < nFarms; i++)
+    for (i = 1; i < nFarms; i++)
     {
       iQualityFarms[farmQuality[i]].push_back(i);
     }
@@ -313,33 +319,65 @@ int main(int argc, char** argv)
       loadQuality[i] = 1;
     }
 
-    cout << loadQuality[1];
-
     // Repetir Función añadir optimo local hasta alcanzar solución inicial factible
-    int randFarm, actualPrize [nQualities] = {0, 0, 0, 0};
-    int T = 1;
+    int randFarm, actualPrize [nQualities], realPrize [nQualities], T = 1, excess;
+    for (i = 0; i < nQualities; i++)
+    {
+      actualPrize[i] = 0;
+      realPrize[i] = 0;
+    }
+
     for (i = 1; i < nQualities; i++)
     {
+      //cout << "Llega calidad " << i << "\n";
       for (T; T < nTrucks; T++)
       {
-        miopeRand(randLength, i, iQualityFarms, T, randFarm, capacity, loadQuality, position, production, profit, cost, minPrize, nTrucks, nFarms, nQualities);
-        if (randFarm == 0)
+        //cout << "Llega al camion " << T << "\n";
+
+        // Si con el excelente anterior ya llegue al mínimo, salto a la siguiente calidad
+        if (minPrize[i] <= actualPrize[i])
         {
           break;
         }
-        if (routes[T].size() == 0)
+
+        // Repetir ciclo hasta llenar el camión de producto
+        while (true)
         {
-          routes[T].push_back(origin);
+          miopeRand(randLength, i, iQualityFarms, T, randFarm, capacity, loadQuality, position, production, profit, cost, minPrize, nTrucks, nFarms, nQualities);
+          //cout << "Para el camion " << T << " se elige la farm " << randFarm << "\n";
+          // Cada uno de estos ciclos termina cuando el camión se llena de producto
+          if (randFarm == 0)
+          {
+            break;
+          }
+          if (routes[T].size() == 0)
+          {
+            routes[T].push_back(origin);
+          }
+          routes[T].push_back(randFarm);
+          position[T] = randFarm;
+          capacity[T] -= production[randFarm];
+          load[T] += production[randFarm];
+          loadQuality[T] = i;
+          actualPrize[i] += production[randFarm];
+          realPrize[i] += production[randFarm];
+          production[randFarm] = 0;
         }
-        routes[T].push_back(randFarm);
-        position[T] = randFarm;
-        capacity[T] -= production[randFarm];
-        load[T] += production[randFarm];
-        actualPrize[i] += production[randFarm];
-        production[randFarm] = 0;
-        loadQuality[T] = i;
-        if (minPrize <= actualPrize)
+        //cout << "Calidad 1: minPrize: " << minPrize[i] << ", actualPrize: " << actualPrize[i] << "\n";
+        
+        // Si terminé de recolectar la cantidad de leche minima de esta calidad
+        // lo que sobra se podrá mezclar en planta para la siguiente calidad
+        // Luego continua con la siguiente calidad
+        // Esto no aplica para la menor calidad de leche
+        if (minPrize[i] <= actualPrize[i])
         {
+          if (i != (nQualities - 1))
+          {
+            excess = actualPrize[i] - minPrize[i];
+            actualPrize[i] = minPrize[i];
+            actualPrize[i+1] += excess;
+          }
+          T++;
           break;
         }
       }
@@ -358,15 +396,62 @@ int main(int argc, char** argv)
     }
 
     // Calcular beneficio solución
-
     float solQuality = 0;
     int distance;
 
+    // Beneficio por valor de leche
+    cout << "File " << in << "\n";
+    cout << "antes (actual): ";
     for (i = 1; i < nQualities; i++)
     {
-      solQuality += actualPrize[i] * profit[i];
+      cout << actualPrize[i] << " ";
+    }
+    cout << "\n";
+    
+    int finalPrize[4];
+    int diff;
+
+    finalPrize[3] = realPrize[3];
+    finalPrize[2] = realPrize[2];
+    finalPrize[1] = realPrize[1];
+    if (finalPrize[3] < minPrize[3])
+    {
+      // Completar la diferencia con leche de calidad 2 y 1 si es necesario
+      diff = minPrize[3] - finalPrize[3];
+      if (finalPrize[2] >= diff)
+      {
+        finalPrize[2] -= diff;
+      }
+      else
+      {
+        finalPrize[1] -= diff - finalPrize[2];
+        finalPrize[2] -= 0;
+      }
+      finalPrize[3] += diff;
     }
 
+    // Verificar si se cumple la restriccion para la leche 2
+    if (finalPrize[2] < minPrize[2])
+    {
+      // Completar la diferencia con leche de calidad 1
+      diff = minPrize[2] - finalPrize[2];
+      finalPrize[2] += diff;
+      finalPrize[1] -= diff;
+    }
+
+    cout << "despues (final): ";
+    for (i = 1; i < nQualities; i++)
+    {
+      cout << finalPrize[i] << " ";
+    }
+    cout << "\n";
+
+    for (i = 1; i < nQualities; i++)
+    {
+      solQuality += finalPrize[i] * profit[i];
+    }
+
+    // Costo de transporte
     for (i = 1; i < nTrucks; i++)
     {
       distance = 0;
@@ -402,13 +487,13 @@ int main(int argc, char** argv)
     ofstream outFile;
     outFile.open ("outputs/" + to_string(in) + ".txt");
 
-    outFile << solQuality << " " << actualPrize[1] << " " << actualPrize[2] << " " << actualPrize[3] << " " << notEmptyRoutes << endl;
+    outFile << solQuality << " " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << " " << nTrucks <<" " << notEmptyRoutes << endl;
 
     for (i = 1; i < nTrucks; i++)
     {
       if (routes[i].size() != 0)
       { 
-        outFile << "Truck " << i << " ";
+        outFile << "Truck " << i << " Q" << loadQuality[i] << " ";
         for (j = 0; j < int(routes[i].size() - 1); j++)
         {
           if (routes[i][j] == origin)
