@@ -113,7 +113,7 @@ int main()
 {
   srand48(Seed);
   ofstream summary;
-  summary.open("outputs/summary.txt");
+  summary.open("outputsGR/summary.txt");
   int in;
   for (in = 1; in < 7; in++){
     // Record start time
@@ -485,7 +485,7 @@ int main()
     // Printear solución y costo asociado
 
     ofstream outFile;
-    outFile.open ("outputs/" + to_string(in) + ".txt");
+    outFile.open ("outputsGR/" + to_string(in) + ".txt");
 
     outFile << solQuality << " " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << " " << nTrucks <<" " << notEmptyRoutes << endl;
 
@@ -525,3 +525,37 @@ int main()
   summary.close();
  return 0;
 }
+// Trabajar siempre en factibilidad
+
+// Quitar load del calculo en cada paso y calcularlo al final
+// Inicializar todos los camiones saliendo y llegando al origen, limpiar las rutas que solo tengan origen al finalizar
+// Solo es necesario manejar realPrize para factibilidad y calidad
+// No se usa actualPrize en SA y finalPrize solo se usa para calcular la mejor combinación
+
+// Simulated Annealing
+// Tomar solución inicial
+// Tirar moneda, sacar o añadir
+
+// Sacar: Toma un camion al azar y le quita un nodo al azar
+// Si el camion no tiene ruta se repite (while)
+// Revisar factibilidad para efectuar cambio
+// Se obtiene la diferencia en calidad de solucion
+// Si el cambio es positivo se saca de inmediato y se modifica la solucion
+// Si el cambio es negativo se evalua con la temperatura
+// Al sacar un nodo se modifica la solución
+// Se restaura la produccion del nodo, la carga del camion, (la capacidad)
+// La ruta del camion se modifica quitando el nodo y conectando los nodos sueltos
+
+// Añadir: Tomar una ruta y añadir un nodo factible (de igual o mayor calidad, respetando capacidad)
+// Si el cambio es positivo se añade de inmediato y se modifica la solucion
+// Si el cambio es negativo se evalua con la temperatura
+
+// Para checkear factibilidad se revisa si realPrize puede satisfacer las demandas minimas
+// Para calcular calidad se encuentra la mejor combinacion de mezcla en planta de realPrize
+// Despues de cada cambio, comparar calidad actual con la mejor encontrada y actualizar
+// solQuality, routes
+
+// Para las instancias pequeñas
+// Repetir 1000 veces y tomar tiempo
+// Repetir 10000 veces y tomar tiempo
+// Repetir 100000 veces y tomar tiempo
