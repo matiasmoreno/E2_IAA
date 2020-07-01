@@ -1,0 +1,12 @@
+0 0 0 0 6 0
+Elapsed time: 0.007978 s
+
+ 
+ ** Simulated annealing ** 
+06
+Truck 1 Q1 80-80
+Truck 2 Q1 80-80
+Truck 3 Q1 80-80
+Truck 4 Q1 80-80
+Truck 5 Q1 80-80
+Elapsed time: 0.000998 s

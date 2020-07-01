@@ -10,7 +10,6 @@ using namespace std;
 
 // Random integers generator
 
-#include <stdlib.h>
 #define srand48(x) srand((int)(x))
 #define drand48() ((double)rand()/RAND_MAX)
 
@@ -35,6 +34,76 @@ int int_rand(int a, int b){
     }
 
     return retorno;
+}
+
+// Funcion de factibilidad
+bool feasible(int realPrize[], int minPrize[])
+{
+  int av2, av3;
+  // Checkear factibilidad en calidad 1
+  if (realPrize[1] < minPrize[1])
+  {
+    return false;
+  }
+  else
+  {
+    // Factibilidad en calidad 2
+    av2 = realPrize[2] + realPrize[1] - minPrize[1];
+    if (av2 < minPrize[2])
+    {
+      return false;
+    }
+    else
+    {
+      // Factibilidad en calidad 3
+      av3 = realPrize[3] + av2 - minPrize[2];
+      if (av3 < minPrize[3])
+      {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Funcion de evaluación
+float eval(int realPrize[], int minPrize[], float profit[])
+{
+  float quality = 0;
+  int finalPrize[4], diff, i;
+  finalPrize[3] = realPrize[3];
+  finalPrize[2] = realPrize[2];
+  finalPrize[1] = realPrize[1];
+
+  if (finalPrize[3] < minPrize[3])
+  {
+    // Completar la diferencia con leche de calidad 2 y 1 si es necesario
+    diff = minPrize[3] - finalPrize[3];
+    if (finalPrize[2] >= diff)
+    {
+      finalPrize[2] -= diff;
+    }
+    else
+    {
+      finalPrize[1] -= diff - finalPrize[2];
+      finalPrize[2] -= 0;
+    }
+    finalPrize[3] += diff;
+  }
+
+  // Verificar si se cumple la restriccion para la leche 2
+  if (finalPrize[2] < minPrize[2])
+  {
+    // Completar la diferencia con leche de calidad 1
+    diff = minPrize[2] - finalPrize[2];
+    finalPrize[2] += diff;
+    finalPrize[1] -= diff;
+  }
+  for (i = 1; i < 4; i++)
+  {
+    quality += finalPrize[i] * profit[i];
+  }
+  return quality;
 }
 
 // Función miope
@@ -113,7 +182,7 @@ int main()
 {
   srand48(Seed);
   ofstream summary;
-  summary.open("outputsGR/summary.txt");
+  summary.open("outputs/summary.txt");
   int in;
   for (in = 1; in < 7; in++){
     // Record start time
@@ -485,7 +554,7 @@ int main()
     // Printear solución y costo asociado
 
     ofstream outFile;
-    outFile.open ("outputsGR/" + to_string(in) + ".txt");
+    outFile.open ("outputs/" + to_string(in) + ".txt");
 
     outFile << solQuality << " " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << " " << nTrucks <<" " << notEmptyRoutes << endl;
 
@@ -520,6 +589,62 @@ int main()
     outFile << "Elapsed time: " << elapsed.count() << " s\n";
     
     summary << to_string(in) << " " << nFarms << " " << nTrucks << " " << solQuality << " " << elapsed.count() << endl; 
+     
+     
+    // ********* Simulated annealing *********
+    outFile << "\n \n ** Simulated annealing ** \n";
+    start = std::chrono::high_resolution_clock::now();
+    float bestQuality = eval(realPrize, minPrize, profit);
+
+    vector <int> bestRoutes[nTrucks];
+    for (i = 1; i < nTrucks; i++)
+    {
+      bestRoutes[i] = routes[i];
+      if (bestRoutes[i].size() == 0)
+      {
+        bestRoutes[i].push_back(origin);
+        bestRoutes[i].push_back(origin);
+      }
+      else
+      {
+        bestRoutes[i].pop_back();
+      }
+    }
+
+
+    //outFile << bestQuality << " " << finalPrize[1] << " " << <finalPrize>[2] << " " << finalPrize[3] << " " << nTrucks <<" " << notEmptyRoutes << endl;
+    outFile << bestQuality << nTrucks << endl;
+
+    for (i = 1; i < nTrucks; i++)
+    {
+      if (bestRoutes[i].size() != 0)
+      { 
+        outFile << "Truck " << i << " Q" << loadQuality[i] << " ";
+        for (j = 0; j < int(bestRoutes[i].size()); j++)
+        {
+          if (bestRoutes[i][j] == origin)
+          {
+            if (j == 0)
+            {
+              outFile << origin << "-";
+            }
+            else
+            {
+              // outFile << origin << " " << bestRoutes[i][j + 1] << " " << load[i] << endl;
+              outFile << origin << endl;
+            } 
+          }
+          else
+          {
+            outFile << bestRoutes[i][j] << "-";
+          } 
+        }
+      }
+    }
+
+    finish = std::chrono::high_resolution_clock::now();
+    elapsed = finish - start;
+    outFile << "Elapsed time: " << elapsed.count() << " s\n";
     outFile.close();
   }
   summary.close();
