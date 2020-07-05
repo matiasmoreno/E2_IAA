@@ -17,6 +17,7 @@ using namespace std;
 int Seed = 0;
 int randLength = 5;
 float addP = 0.5;
+int nRes = 100, nIt = 1000;
 
 float float_rand(float a, float b) {
     float retorno = 0;
@@ -168,13 +169,20 @@ void measureDist(int distance[], int nTrucks, vector <int> routes[], int **cost)
       dist = 0;
       if (routes[i].size() != 0)
       {
+        // origen - primera
+        dist += cost[ 0 ][ routes[i][1] ];
         for (j = 1; j < int(routes[i].size() - 1); j++)
         {
-          if (j == 1)
+          // ultima - origen
+          if (j == int(routes[i].size() - 2))
           {
-            dist += cost[0][routes[i][1]];
+            dist += cost[ routes[i][j] ][ 0 ];
           }
-          dist += cost[routes[i][j]][routes[i][j + 1]];
+          else
+          {
+            // actual - siguiente
+            dist += cost[ routes[i][j] ][ routes[i][j + 1] ];
+          }
         }
       }
       distance[i] = dist;
@@ -620,8 +628,10 @@ int main()
         
     ofstream outFile;
     outFile.open ("outputs/" + to_string(in) + ".txt");
+    outFile << "Instance " << in << ", nF: " << nFarms - 1 << ", nT: " << nTrucks - 1 << ", Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl << endl;
     outFile << "** GRASP **\n";
-    outFile << actualQuality << " " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << " " << nTrucks << endl;
+    outFile << "Q: " << actualQuality << ", Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
+    outFile << "Routes / Distance / Load" << endl;
     for (i = 1; i < nTrucks; i++)
     {
       if (actualRoutes[i].size() != 0)
@@ -687,14 +697,14 @@ int main()
 
     // Iterador
     
-    int it0, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos, minQuality;
+    int itRes, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos, minQuality;
     float T0 = 10000, Temp = 10000;
     float p, alpha = 0.995, add;
     bool updt;
-    for (it0 = 0; it0 < 50; it0++)
+    for (itRes = 0; itRes < nRes; itRes++)
     {
       Temp = T0;
-      for (it = 0; it < 1000; it++)
+      for (it = 0; it < nIt; it++)
       {
         nAvailableF = 0;
         updt = false;
@@ -721,14 +731,13 @@ int main()
             r = int_rand(0, nAvailableF);
             rFarm = availableF[r];
             // Actualizar newRoutes, añadiendo rFarm a la posicion con menor costo
-            cout << " antes ";
             if (int(actualRoutes[rTruck].size() == 2))
             {
               newRoutes[rTruck].insert(newRoutes[rTruck].begin() + 1, rFarm);
             }
             else
             {
-              minDist = cost[ 0 ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i] ];
+              minDist = cost[ 0 ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][1] ];
               minDistPos = 1;
               for (i = 1; i < int(actualRoutes[rTruck].size() - 1); i++)
               {
@@ -738,9 +747,7 @@ int main()
                 }
                 else
                 {
-                  cout << " 1.5 ";
                   dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i+1] ];
-                  cout << " 1.6 ";
                 }
                 if (dist < minDist)
                 {
@@ -748,7 +755,6 @@ int main()
                   minDistPos = i+1;
                 }
               }
-              cout << " add for despues \n";
               newRoutes[rTruck].insert(newRoutes[rTruck].begin() + minDistPos, rFarm);
             }
             // Nueva cantidad de recolección por calidad
@@ -822,7 +828,7 @@ int main()
             // Checkear actualquality con bestQuality
             if (bestQuality < actualQuality)
             {
-              //cout << "Instancia: " << in << ", it0: " << it0 << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
+              //cout << "Instancia: " << in << ", itRes: " << itRes << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
               //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
               bestQuality = actualQuality;
               bestRoutes[rTruck] = actualRoutes[rTruck];
@@ -859,8 +865,9 @@ int main()
     bestBlend(finalPrize, bestRealPrize, minPrize);
 
     // Escribir solución
-    outFile << "\n** Simulated annealing ** \n";
-    outFile << bestQuality << " " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << " " << nTrucks << endl;
+    outFile << "\n** SA ** nReset: " << nRes << ", nIt: " << nIt << endl;
+    outFile << "Q: " << actualQuality << ", Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
+    outFile << "Routes / Distance / Load" << endl;
     for (i = 1; i < nTrucks; i++)
     {
       if (bestRoutes[i].size() != 0)
