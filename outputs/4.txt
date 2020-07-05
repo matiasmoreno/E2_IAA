@@ -1,12 +1,17 @@
-0 0 0 0 6 0
-Elapsed time: 0.007978 s
-
- 
- ** Simulated annealing ** 
-06
-Truck 1 Q1 80-80
-Truck 2 Q1 80-80
-Truck 3 Q1 80-80
-Truck 4 Q1 80-80
-Truck 5 Q1 80-80
+** GRASP **
+0 0 0 0 6
+Truck 1 Q1 80-80 0 0
+Truck 2 Q1 80-80 0 0
+Truck 3 Q1 80-80 0 0
+Truck 4 Q1 80-80 0 0
+Truck 5 Q1 80-80 0 0
 Elapsed time: 0.000998 s
+
+** Simulated annealing ** 
+709183 146301 808671 0 6
+Truck 1 Q3 80-15-9-8-36-38-30-33-25-21-80 830 29904
+Truck 2 Q2 80-28-22-32-5-2-19-16-4-80 682 29821
+Truck 3 Q3 80-11-10-13-14-35-34-31-29-80 532 28810
+Truck 4 Q3 80-7-12-33-39-80 439 29386
+Truck 5 Q2 80-23-34-17-40-80 532 28767
+Elapsed time: 0.578452 s
