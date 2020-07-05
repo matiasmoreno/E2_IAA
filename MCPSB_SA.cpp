@@ -92,19 +92,27 @@ void bestBlend(int finalPrize[], int realPrize[], int minPrize[])
 void getRealPrize(int realPrize[], vector <int> routes[], int nTrucks, int nQualities, int oProd[], int farmQuality[])
 {
   int i, j, load, minQ;
+  for (i = 0; i < nQualities; i++)
+  {
+    realPrize[i] = 0;
+  }
+  
   for (i = 1; i < nTrucks; i++)
   {
     load = 0;
     minQ = 1;
-    for (j = 1; j < int(routes[i].size() - 1); j++)
+    if (int(routes[i].size() > 2))
     {
-      load += oProd[routes[i][j]];
-      if (farmQuality[ routes[i][j] ] > minQ)
+      for (j = 1; j < int(routes[i].size() - 1); j++)
       {
-        minQ = farmQuality[ routes[i][j] ];
+        load += oProd[routes[i][j]];
+        if (farmQuality[ routes[i][j] ] > minQ)
+        {
+          minQ = farmQuality[ routes[i][j] ];
+        }
       }
+      realPrize[minQ] += load;
     }
-    realPrize[minQ] += load;
   }
 }
 
@@ -695,7 +703,6 @@ int main()
         add = float_rand(0,1);
         if (add > addP)
         {
-          //cout << "add\n";
           // Añadir nodo factible
           rTruck = int_rand(1, nTrucks);
           // Generar una lista de granjas factibles para la capacidad de rTruck
@@ -744,15 +751,14 @@ int main()
             }
             // Nueva cantidad de recolección por calidad
             getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-
             if (feasible(newRealPrize, minPrize))
             {
               updt = true;
             }
             else
             {
-              // Restaurar newRealPrize
-              for (i = 0; i < nQualities; i++)
+              // Restaurar actualRealPrize
+              for (i = 1; i < nQualities; i++)
               {
                 newRealPrize[i] = actualRealPrize[i];
               }
@@ -773,16 +779,14 @@ int main()
             rFarm = actualRoutes[rTruck][r];
             newRoutes[rTruck].erase(newRoutes[rTruck].begin() + r);
             getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-            
-            // Factibilidad del cambio
             if (feasible(newRealPrize, minPrize))
             {
               updt = true;
             }
             else
             {
-              // Restaurar newRealPrize
-              for (i = 0; i < nQualities; i++)
+              // Restaurar actualRealPrize
+              for (i = 1; i < nQualities; i++)
               {
                 newRealPrize[i] = actualRealPrize[i];
               }
@@ -792,6 +796,7 @@ int main()
           }
           //cout << "despues remove\n";
         }
+        // Factibilidad del cambio
         if (updt)
         {
           //cout << "update\n";
@@ -811,29 +816,30 @@ int main()
             // actualizar production, capacity
             getCapacity(capacity, oCap, oProd, actualRoutes, nTrucks);
             getProduction(production, oProd, actualRoutes, nTrucks, nFarms);
+
+            // Checkear actualquality con bestQuality
+            if (bestQuality < actualQuality)
+            {
+              //cout << "Instancia: " << in << ", it0: " << it0 << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
+              //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
+              bestQuality = actualQuality;
+              bestRoutes[rTruck] = actualRoutes[rTruck];
+              for (i = 1; i < nQualities; i++)
+              {
+                bestRealPrize[i] = actualRealPrize[i];
+              }
+            }
           }
           else
           {
             // Restaurar actualRealPrize
-            for (i = 0; i < nQualities; i++)
+            for (i = 1; i < nQualities; i++)
             {
               newRealPrize[i] = actualRealPrize[i];
             }
             // Restaurar newRoutes
             newRoutes[rTruck] = actualRoutes[rTruck];
           } 
-
-          // Checkear actualquality con bestQuality
-          if (bestQuality < actualQuality)
-          {
-            cout << "Instancia: " << in << ", it0: " << it0 << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
-            bestQuality = actualQuality;
-            bestRoutes[rTruck] = actualRoutes[rTruck];
-            for (i = 0; i < nQualities; i++)
-            {
-              bestRealPrize[i] = actualRealPrize[i];
-            }
-          }
           //cout << "despues update\n";
         }
       }
