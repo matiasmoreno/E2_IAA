@@ -14,15 +14,16 @@ using namespace std;
 #define srand48(x) srand((int)(x))
 #define drand48() ((double)rand()/RAND_MAX)
 
-int iniS = 0, finS = 3;
+int realInstance = 1;
+int iniS = 0, finS = 5;
 int Seed;
 int randLength = 5;
 float addP = 0.2;
-int nRes = 1000, nIt = 3000;
+int nRes = 2500, nIt = 4000;
 int w = 200;
 float alpha = 0.997;
 float T0 = 10000;
-int ini = 1, fin = 2;
+int ini = 1, fin = 6;
 
 float float_rand(float a, float b) {
     float retorno = 0;
@@ -63,6 +64,33 @@ int int_rand(int a, int b){
 
 // Mejor mezcla
 
+void getRealPrize(int realPrize[], vector <int> routes[], int nTrucks, int nQualities, int oProd[], int farmQuality[])
+{
+  int i, j, load, minQ;
+  for (i = 0; i < nQualities; i++)
+  {
+    realPrize[i] = 0;
+  }
+  
+  for (i = 1; i < nTrucks; i++)
+  {
+    load = 0;
+    minQ = 1;
+    if (int(routes[i].size() > 2))
+    {
+      for (j = 1; j < int(routes[i].size() - 1); j++)
+      {
+        load += oProd[routes[i][j]];
+        if (farmQuality[ routes[i][j] ] > minQ)
+        {
+          minQ = farmQuality[ routes[i][j] ];
+        }
+      }
+      realPrize[minQ] += load;
+    }
+  }
+}
+
 void bestBlend(int finalPrize[], int realPrize[], int minPrize[])
 {
   int diff;
@@ -95,32 +123,7 @@ void bestBlend(int finalPrize[], int realPrize[], int minPrize[])
   }
 }
 
-void getRealPrize(int realPrize[], vector <int> routes[], int nTrucks, int nQualities, int oProd[], int farmQuality[])
-{
-  int i, j, load, minQ;
-  for (i = 0; i < nQualities; i++)
-  {
-    realPrize[i] = 0;
-  }
-  
-  for (i = 1; i < nTrucks; i++)
-  {
-    load = 0;
-    minQ = 1;
-    if (int(routes[i].size() > 2))
-    {
-      for (j = 1; j < int(routes[i].size() - 1); j++)
-      {
-        load += oProd[routes[i][j]];
-        if (farmQuality[ routes[i][j] ] > minQ)
-        {
-          minQ = farmQuality[ routes[i][j] ];
-        }
-      }
-      realPrize[minQ] += load;
-    }
-  }
-}
+
 
 void getCapacity(int capacity[], int oCap[], int oProd[], vector <int> routes[], int nTrucks){
   int i, j;
@@ -232,34 +235,8 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
 {
   float quality = 0;
   int finalPrize[4], diff, i;
-  finalPrize[3] = realPrize[3];
-  finalPrize[2] = realPrize[2];
-  finalPrize[1] = realPrize[1];
-
-  if (finalPrize[3] < minPrize[3])
-  {
-    // Completar la diferencia con leche de calidad 2 y 1 si es necesario
-    diff = minPrize[3] - finalPrize[3];
-    if (finalPrize[2] >= diff)
-    {
-      finalPrize[2] -= diff;
-    }
-    else
-    {
-      finalPrize[1] -= diff - finalPrize[2];
-      finalPrize[2] -= 0;
-    }
-    finalPrize[3] += diff;
-  }
-
-  // Verificar si se cumple la restriccion para la leche 2
-  if (finalPrize[2] < minPrize[2])
-  {
-    // Completar la diferencia con leche de calidad 1
-    diff = minPrize[2] - finalPrize[2];
-    finalPrize[2] += diff;
-    finalPrize[1] -= diff;
-  }
+  bestBlend(finalPrize, realPrize, minPrize);
+  
   for (i = 1; i < 4; i++)
   {
     quality += finalPrize[i] * profit[i];
@@ -298,7 +275,7 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
   {
     if (capacity[T] == oCap[T])
     {
-      for (j = 0; j < iQualityFarms[i].size(); j++)
+      for (j = 0; j < int(iQualityFarms[i].size()); j++)
       {
         if (production[ iQualityFarms[i][j] ] == capacity[T])
         {
@@ -378,12 +355,17 @@ int main()
   int in;
   for (in = ini; in < fin; in++){
     cout << "Instancia: " << in << endl;
-    // Record start time
-    auto start = std::chrono::high_resolution_clock::now();
 
     ifstream inFile;
-    // inFile.open("MCWSB/Real instances/5clusters.dat." + to_string(in);
-    inFile.open("MCWSB/Instances/instancia" + to_string(in) + ".mcsb");
+    if (realInstance == 1)
+    {
+      inFile.open("MCWSB/Real instances/5clusters.dat." + to_string(in));
+    }
+    else
+    {
+      inFile.open("MCWSB/Instances/instancia" + to_string(in) + ".mcsb");
+    }
+
     string line;
     string word;
     
@@ -561,41 +543,58 @@ int main()
 
     inFile.close();
 
-    // Crear nTrucks vectores dinamicos para generar las rutas de cada camion
-
-    vector <int> actualRoutes[nTrucks];
-
-    // Crear nQualities vectores dinamicos para agrupar granjas por calidad
-
-    vector <int> iQualityFarms[nQualities];
-
-    for (i = 1; i < nFarms; i++)
-    {
-      iQualityFarms[farmQuality[i]].push_back(i);
-    }
-
-    // Inicializar posiciones, carga y calidad de leche de los camiones en el origen: nodo 0
-
-    for (i = 1; i < nTrucks; i++)
-    {
-      position[i] = 0;
-      loadQuality[i] = 1;
-      actualRoutes[i].push_back(origin);
-    }
+    // Record start time
+    auto start = std::chrono::high_resolution_clock::now();
     ofstream outFile;
-    outFile.open ("outputs/" + to_string(in) + ".txt");
-    outFile << "Instance " << in << "  nF: " << nFarms - 1 << "  nT: " << nTrucks - 1 << "  Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl << endl;
+    if (realInstance == 1)
+    {
+      outFile.open ("outputsReal/" + to_string(in) + ".txt");
+    }
+    else
+    {
+      outFile.open ("outputs/" + to_string(in) + ".txt");
+    }
+
+    outFile << "Instance " << in << "  nF: " << nFarms - 1 << "  nT: " << nTrucks - 1 << "  Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl;
     
     for (Seed = iniS; Seed < finS; Seed++)
     {
+      start = std::chrono::high_resolution_clock::now();
+      outFile << endl << "Seed " << Seed << endl;
       cout << "Seed " << Seed << endl;
       srand48(Seed);
+
+      // Crear nTrucks vectores dinamicos para generar las rutas de cada camion
+
+      vector <int> actualRoutes[nTrucks];
+
+      // Crear nQualities vectores dinamicos para agrupar granjas por calidad
+
+      vector <int> iQualityFarms[nQualities];
+
+      for (i = 1; i < nFarms; i++)
+      {
+        iQualityFarms[farmQuality[i]].push_back(i);
+      }
+
+      // Inicializar posiciones, carga y calidad de leche de los camiones en el origen: nodo 0
+
+      for (i = 1; i < nTrucks; i++)
+      {
+        position[i] = 0;
+        actualRoutes[i].push_back(origin);
+        capacity[i] = oCap[i];
+      }
+
+      for (i = 1; i < nFarms; i++)
+      {
+        production[i] = oProd[i];
+      }
       
       int randFarm, actualPrize [nQualities], actualRealPrize [nQualities], T = 1, excess;
       for (i = 0; i < nQualities; i++)
       {
         actualPrize[i] = 0;
-        actualRealPrize[i] = 0;
       }
 
       for (i = 1; i < nQualities; i++)
@@ -613,16 +612,36 @@ int main()
           {
             miopeRand(randLength, i, iQualityFarms, T, randFarm, capacity, oCap, position, production, profit, cost);
             // Cada uno de estos ciclos termina cuando el camión se llena de producto
+            if (randFarm == 0 && i == 2)
+            {
+              miopeRand(randLength, 1, iQualityFarms, T, randFarm, capacity, oCap, position, production, profit, cost);
+              if (randFarm == 0)
+              {
+                break;
+              }
+            }
+
+            if (randFarm == 0 && i == 3)
+            {
+              miopeRand(randLength, 2, iQualityFarms, T, randFarm, capacity, oCap, position, production, profit, cost);
+              if (randFarm == 0)
+              {
+                miopeRand(randLength, 1, iQualityFarms, T, randFarm, capacity, oCap, position, production, profit, cost);
+                if (randFarm == 0)
+                {
+                  break;
+                }
+              }
+            }
             if (randFarm == 0)
             {
               break;
             }
+            
             actualRoutes[T].push_back(randFarm);
             position[T] = randFarm;
             capacity[T] -= production[randFarm];
-            loadQuality[T] = i;
             actualPrize[i] += production[randFarm];
-            actualRealPrize[i] += production[randFarm];
             production[randFarm] = 0;
           }
           
@@ -657,11 +676,13 @@ int main()
 
       getRealPrize(actualRealPrize, actualRoutes, nTrucks, nQualities, oProd, farmQuality);
       bestBlend(finalPrize, actualRealPrize, minPrize);
+      getCapacity(capacity, oCap, oProd, actualRoutes, nTrucks);
       actualQuality = eval(actualRealPrize, minPrize, profit, cost, nTrucks, actualRoutes);
 
-      // Distancia de transporte
+      // Distancia de transporte y calidad de carga
       int distance [nTrucks];
       measureDist(distance, nTrucks, actualRoutes, cost);
+      getLoadQuality(loadQuality, farmQuality, actualRoutes, nTrucks);
 
       // Escribir solución
           
@@ -731,7 +752,7 @@ int main()
 
       // Iterador SA
       
-      int itRes, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos, minQuality;
+      int itRes, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos;
       float p, alpha = 0.995, add;
       float Temp;
       bool updt;
@@ -896,12 +917,14 @@ int main()
       // Guardar mejor solución  actual en archivo
 
       //Calcular loadQuality final
-      getLoadQuality(loadQuality, farmQuality, actualRoutes, nTrucks);
+      getCapacity(capacity, oCap, oProd, bestRoutes, nTrucks);
+      getLoadQuality(loadQuality, farmQuality, bestRoutes, nTrucks);
 
       //Calcular distancia final
       measureDist(distance, nTrucks, bestRoutes, cost);
 
       // Calcular la mejor mezcla en planta final
+      getRealPrize(bestRealPrize, bestRoutes, nTrucks, nQualities, oProd, farmQuality);
       bestBlend(finalPrize, bestRealPrize, minPrize);
 
       // Escribir mejor solución
@@ -936,7 +959,7 @@ int main()
 
       // Mejores Soluciones
       outFile << "Mejores soluciones cada " << w << " resets:\n";
-      for (i = 0; i < bestSolutions.size(); i++)
+      for (i = 0; i < int(bestSolutions.size()); i++)
       {
         if (i == 0)
         {
