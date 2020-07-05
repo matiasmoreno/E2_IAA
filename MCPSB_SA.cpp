@@ -14,10 +14,15 @@ using namespace std;
 #define srand48(x) srand((int)(x))
 #define drand48() ((double)rand()/RAND_MAX)
 
-int Seed = 0;
+int iniS = 0, finS = 3;
+int Seed;
 int randLength = 5;
-float addP = 0.5;
-int nRes = 100, nIt = 1000;
+float addP = 0.2;
+int nRes = 1000, nIt = 3000;
+int w = 200;
+float alpha = 0.997;
+float T0 = 10000;
+int ini = 1, fin = 2;
 
 float float_rand(float a, float b) {
     float retorno = 0;
@@ -165,33 +170,36 @@ void measureDist(int distance[], int nTrucks, vector <int> routes[], int **cost)
 {
   int dist, i , j;
   for (i = 1; i < nTrucks; i++)
+  {
+    dist = 0;
+    if (routes[i].size() > 2)
     {
-      dist = 0;
-      if (routes[i].size() != 0)
+      // origen - primera
+      dist += cost[ 0 ][ routes[i][1] ];
+      for (j = 1; j < int(routes[i].size() - 1); j++)
       {
-        // origen - primera
-        dist += cost[ 0 ][ routes[i][1] ];
-        for (j = 1; j < int(routes[i].size() - 1); j++)
+        // ultima - origen
+        if (j == int(routes[i].size() - 2))
         {
-          // ultima - origen
-          if (j == int(routes[i].size() - 2))
-          {
-            dist += cost[ routes[i][j] ][ 0 ];
-          }
-          else
-          {
-            // actual - siguiente
-            dist += cost[ routes[i][j] ][ routes[i][j + 1] ];
-          }
+          dist += cost[ routes[i][j] ][ 0 ];
+        }
+        else
+        {
+          // actual - siguiente
+          dist += cost[ routes[i][j] ][ routes[i][j + 1] ];
         }
       }
-      distance[i] = dist;
     }
+    distance[i] = dist;
+  }
 }
 
 // Funcion de factibilidad
 bool feasible(int realPrize[], int minPrize[])
 {
+  /* cout << "Real: " << realPrize[1] << " " << realPrize[2] << " " << realPrize[3] << " " << endl;
+  cout << "Min: " << minPrize[1] << " " << minPrize[2] << " " << minPrize[3] << " " << endl; */
+  
   int av2, av3;
   // Checkear factibilidad en calidad 1
   if (realPrize[1] < minPrize[1])
@@ -256,18 +264,25 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
   {
     quality += finalPrize[i] * profit[i];
   }
-
+  // Costo de rutas
   for (i = 1; i < nTrucks; i++)
   {
-    if (routes[i].size() != 0)
+    if (routes[i].size() > 2)
     {
+      // origen - primera
+      quality -= cost[ 0 ][ routes[i][1] ];
       for (int j = 1; j < int(routes[i].size() - 1); j++)
       {
-        if (j == 1)
+        // ultima - origen
+        if (j == int(routes[i].size() - 2))
         {
-          quality -= cost[0][routes[i][1]];
+          quality -= cost[ routes[i][j] ][ 0 ];
         }
-        quality -= cost[routes[i][j]][routes[i][j + 1]];
+        else
+        {
+          // actual - siguiente
+          quality -= cost[ routes[i][j] ] [routes[i][j + 1] ];
+        }
       }
     }
   }
@@ -275,8 +290,25 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
 }
 
 // Función miope
-void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& randFarm, int capacity[], int position[], int production[], float profit[], int **cost){
+void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& randFarm, int capacity[], int oCap[], int position[], int production[], float profit[], int **cost){
   int j, k;
+
+  // **Caso especial instancias de juguete para produccion igual a la capacidad del camion en calidad mas alta
+  if (i == 1)
+  {
+    if (capacity[T] == oCap[T])
+    {
+      for (j = 0; j < iQualityFarms[i].size(); j++)
+      {
+        if (production[ iQualityFarms[i][j] ] == capacity[T])
+        {
+          randFarm = iQualityFarms[i][j];
+          return;
+        }
+      }
+    }
+  }
+
   // Busco en las granjas de la calidad actual
   int available = iQualityFarms[i].size(), realAvailable = 0;
   // No quedan mas granjas para visitar
@@ -340,11 +372,11 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
 // Capture_Params(argc,argv); */
 int main()
 {
-  srand48(Seed);
   ofstream summary;
   summary.open("outputs/summary.txt");
+  
   int in;
-  for (in = 1; in < 7; in++){
+  for (in = ini; in < fin; in++){
     cout << "Instancia: " << in << endl;
     // Record start time
     auto start = std::chrono::high_resolution_clock::now();
@@ -550,218 +582,296 @@ int main()
       loadQuality[i] = 1;
       actualRoutes[i].push_back(origin);
     }
-
-    // Repetir Función añadir optimo local hasta alcanzar solución inicial factible
-    int randFarm, actualPrize [nQualities], actualRealPrize [nQualities], T = 1, excess;
-    for (i = 0; i < nQualities; i++)
+    ofstream outFile;
+    outFile.open ("outputs/" + to_string(in) + ".txt");
+    outFile << "Instance " << in << "  nF: " << nFarms - 1 << "  nT: " << nTrucks - 1 << "  Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl << endl;
+    
+    for (Seed = iniS; Seed < finS; Seed++)
     {
-      actualPrize[i] = 0;
-      actualRealPrize[i] = 0;
-    }
-
-    for (i = 1; i < nQualities; i++)
-    {
-      for (; T < nTrucks; T++)
+      cout << "Seed " << Seed << endl;
+      srand48(Seed);
+      
+      int randFarm, actualPrize [nQualities], actualRealPrize [nQualities], T = 1, excess;
+      for (i = 0; i < nQualities; i++)
       {
+        actualPrize[i] = 0;
+        actualRealPrize[i] = 0;
+      }
 
-        // Si con el excelente anterior ya llegue al mínimo, salto a la siguiente calidad
-        if (minPrize[i] <= actualPrize[i])
+      for (i = 1; i < nQualities; i++)
+      {
+        for (; T < nTrucks; T++)
         {
-          break;
-        }
-
-        // Repetir ciclo hasta llenar el camión de producto
-        while (true)
-        {
-          miopeRand(randLength, i, iQualityFarms, T, randFarm, capacity, position, production, profit, cost);
-          // Cada uno de estos ciclos termina cuando el camión se llena de producto
-          if (randFarm == 0)
+          // Si con el excedente anterior ya llegue al mínimo, salto a la siguiente calidad
+          if (minPrize[i] <= actualPrize[i])
           {
             break;
           }
-          actualRoutes[T].push_back(randFarm);
-          position[T] = randFarm;
-          capacity[T] -= production[randFarm];
-          loadQuality[T] = i;
-          actualPrize[i] += production[randFarm];
-          actualRealPrize[i] += production[randFarm];
-          production[randFarm] = 0;
-        }
-        
-        // Si terminé de recolectar la cantidad de leche minima de esta calidad
-        // lo que sobra se podrá mezclar en planta para la siguiente calidad
-        // Luego continua con la siguiente calidad
-        // Esto no aplica para la menor calidad de leche
-        if (minPrize[i] <= actualPrize[i])
-        {
-          if (i != (nQualities - 1))
+
+          // Repetir ciclo hasta llenar el camión de producto
+          while (true)
           {
-            excess = actualPrize[i] - minPrize[i];
-            actualPrize[i] = minPrize[i];
-            actualPrize[i+1] += excess;
+            miopeRand(randLength, i, iQualityFarms, T, randFarm, capacity, oCap, position, production, profit, cost);
+            // Cada uno de estos ciclos termina cuando el camión se llena de producto
+            if (randFarm == 0)
+            {
+              break;
+            }
+            actualRoutes[T].push_back(randFarm);
+            position[T] = randFarm;
+            capacity[T] -= production[randFarm];
+            loadQuality[T] = i;
+            actualPrize[i] += production[randFarm];
+            actualRealPrize[i] += production[randFarm];
+            production[randFarm] = 0;
           }
-          T++;
-          break;
+          
+          // Si terminé de recolectar la cantidad de leche minima de esta calidad
+          // lo que sobra se podrá mezclar en planta para la siguiente calidad
+          // Luego continua con la siguiente calidad
+          // Esto no aplica para la menor calidad de leche
+          if (minPrize[i] <= actualPrize[i])
+          {
+            if (i != (nQualities - 1))
+            {
+              excess = actualPrize[i] - minPrize[i];
+              actualPrize[i] = minPrize[i];
+              actualPrize[i+1] += excess;
+            }
+            T++;
+            break;
+          }
         }
       }
-    }
 
-    // Volver a la planta
+      // Volver a la planta
 
-    for (i = 1; i < nTrucks; i++)
-    {
-      actualRoutes[i].push_back(origin);
-    }
+      for (i = 1; i < nTrucks; i++)
+      {
+        actualRoutes[i].push_back(origin);
+      }
 
-    // Beneficio por valor de leche
-    int finalPrize[4];
-    float actualQuality;
+      // Beneficio por valor de leche
+      int finalPrize[4];
+      float actualQuality;
 
-    bestBlend(finalPrize, actualRealPrize, minPrize);
-    actualQuality = eval(actualRealPrize, minPrize, profit, cost, nTrucks, actualRoutes);
+      getRealPrize(actualRealPrize, actualRoutes, nTrucks, nQualities, oProd, farmQuality);
+      bestBlend(finalPrize, actualRealPrize, minPrize);
+      actualQuality = eval(actualRealPrize, minPrize, profit, cost, nTrucks, actualRoutes);
 
-    // Distancia de transporte
-    int distance [nTrucks];
-    measureDist(distance, nTrucks, actualRoutes, cost);
+      // Distancia de transporte
+      int distance [nTrucks];
+      measureDist(distance, nTrucks, actualRoutes, cost);
 
-    // Escribir solución
-        
-    ofstream outFile;
-    outFile.open ("outputs/" + to_string(in) + ".txt");
-    outFile << "Instance " << in << ", nF: " << nFarms - 1 << ", nT: " << nTrucks - 1 << ", Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl << endl;
-    outFile << "** GRASP **\n";
-    outFile << "Q: " << actualQuality << ", Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
-    outFile << "Routes / Distance / Load" << endl;
-    for (i = 1; i < nTrucks; i++)
-    {
-      if (actualRoutes[i].size() != 0)
-      { 
-        outFile << "Truck " << i << " Q" << loadQuality[i] << " ";
-        for (j = 0; j < int(actualRoutes[i].size()); j++)
-        {
-          if (actualRoutes[i][j] == origin)
+      // Escribir solución
+          
+      outFile << "** GRASP **  Q: " << actualQuality << "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
+      outFile << "Routes / Distance / Load" << endl;
+      for (i = 1; i < nTrucks; i++)
+      {
+        if (actualRoutes[i].size() != 0)
+        { 
+          outFile << "Truck " << i << " Q" << loadQuality[i] << " ";
+          for (j = 0; j < int(actualRoutes[i].size()); j++)
           {
-            if (j == 0)
+            if (actualRoutes[i][j] == origin)
             {
-              outFile << origin << "-";
+              if (j == 0)
+              {
+                outFile << origin << "-";
+              }
+              else
+              {
+                outFile << origin << " " << distance[i] << " " << oCap[i] - capacity[i] << endl;
+              } 
             }
             else
             {
-              outFile << origin << " " << distance[i] << " " << oCap[i] - capacity[i] << endl;
+              outFile << actualRoutes[i][j] << "-";
             } 
+          }
+        }
+      }
+      // Record end time
+      auto finish = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double> elapsed = finish - start;
+      outFile << "Elapsed time: " << elapsed.count() << " s\n";
+      
+      summary << to_string(in) << " " << nFarms << " " << nTrucks << " " << actualQuality << " " << elapsed.count() << endl; 
+      
+      // Simulated annealing
+      start = std::chrono::high_resolution_clock::now();
+
+      float bestQuality = actualQuality, newQuality;
+
+      // realPrize
+      int bestRealPrize [nQualities];
+      for (i = 0; i < nQualities; i++)
+      {
+        bestRealPrize[i] = actualRealPrize[i];
+      }
+      int newRealPrize [nQualities];
+      for (i = 0; i < nQualities; i++)
+      {
+        newRealPrize[i] = actualRealPrize[i];
+      }
+
+      // Rutas
+      
+      vector <int> bestRoutes[nTrucks];
+      for (i = 1; i < nTrucks; i++)
+      {
+        bestRoutes[i] = actualRoutes[i];
+      }
+      vector <int> newRoutes[nTrucks];
+      for (i = 1; i < nTrucks; i++)
+      {
+        newRoutes[i] = bestRoutes[i];
+      }
+
+      // Iterador SA
+      
+      int itRes, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos, minQuality;
+      float p, alpha = 0.995, add;
+      float Temp;
+      bool updt;
+      vector <float> bestSolutions;
+      for (itRes = 0; itRes < nRes; itRes++)
+      {
+        Temp = T0;
+        for (it = 0; it < nIt; it++)
+        {
+          nAvailableF = 0;
+          updt = false;
+
+          // Añadir o Quitar granja
+          add = float_rand(0,1);
+          if (addP > add)
+          {
+            // Añadir nodo factible
+            rTruck = int_rand(1, nTrucks);
+            // Generar una lista de granjas factibles para la capacidad de rTruck
+            for (i = 1; i < nFarms; i++)
+              if (production[i] > 0 && production[i] <= capacity[rTruck])
+            {
+              {
+                availableF[nAvailableF] = i;
+                nAvailableF +=1;
+              }
+            }
+            // cout << " add for 1 \n";
+            // Si el tamaño de la lista es mayor a 0 escojer una granja al azar
+            if (nAvailableF > 0)
+            {
+              r = int_rand(0, nAvailableF);
+              rFarm = availableF[r];
+              // Actualizar newRoutes, añadiendo rFarm a la posicion con menor costo
+              if (int(actualRoutes[rTruck].size() == 2))
+              {
+                newRoutes[rTruck].insert(newRoutes[rTruck].begin() + 1, rFarm);
+              }
+              else
+              {
+                minDist = cost[ 0 ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][1] ];
+                minDistPos = 1;
+                for (i = 1; i < int(actualRoutes[rTruck].size() - 1); i++)
+                {
+                  if (i == int(actualRoutes[rTruck].size() - 2))
+                  {
+                    dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ 0 ];
+                  }
+                  else
+                  {
+                    dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i+1] ];
+                  }
+                  if (dist < minDist)
+                  {
+                    minDist = dist;
+                    minDistPos = i+1;
+                  }
+                }
+                newRoutes[rTruck].insert(newRoutes[rTruck].begin() + minDistPos, rFarm);
+              }
+              // Nueva cantidad de recolección por calidad
+              getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
+              if (feasible(newRealPrize, minPrize))
+              {
+                updt = true;
+              }
+              else
+              {
+                // Restaurar actualRealPrize
+                for (i = 1; i < nQualities; i++)
+                {
+                  newRealPrize[i] = actualRealPrize[i];
+                }
+                // Restaurar newRoutes
+                newRoutes[rTruck] = actualRoutes[rTruck];
+              }
+            }
           }
           else
           {
-            outFile << actualRoutes[i][j] << "-";
-          } 
-        }
-      }
-    }
-    // Record end time
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    outFile << "Elapsed time: " << elapsed.count() << " s\n";
-    
-    summary << to_string(in) << " " << nFarms << " " << nTrucks << " " << actualQuality << " " << elapsed.count() << endl; 
-     
-    // Simulated annealing
-    start = std::chrono::high_resolution_clock::now();
-
-
-    float bestQuality = actualQuality, newQuality;
-
-    // realPrize
-    int bestRealPrize [nQualities];
-    for (i = 0; i < nQualities; i++)
-    {
-      bestRealPrize[i] = actualRealPrize[i];
-    }
-    int newRealPrize [nQualities];
-    for (i = 0; i < nQualities; i++)
-    {
-      newRealPrize[i] = actualRealPrize[i];
-    }
-
-    // Rutas
-    
-    vector <int> bestRoutes[nTrucks];
-    for (i = 1; i < nTrucks; i++)
-    {
-      bestRoutes[i] = actualRoutes[i];
-    }
-    vector <int> newRoutes[nTrucks];
-    for (i = 1; i < nTrucks; i++)
-    {
-      newRoutes[i] = bestRoutes[i];
-    }
-
-    // Iterador
-    
-    int itRes, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos, minQuality;
-    float T0 = 10000, Temp = 10000;
-    float p, alpha = 0.995, add;
-    bool updt;
-    for (itRes = 0; itRes < nRes; itRes++)
-    {
-      Temp = T0;
-      for (it = 0; it < nIt; it++)
-      {
-        nAvailableF = 0;
-        updt = false;
-
-        // Añadir o Quitar granja
-        add = float_rand(0,1);
-        if (add > addP)
-        {
-          // Añadir nodo factible
-          rTruck = int_rand(1, nTrucks);
-          // Generar una lista de granjas factibles para la capacidad de rTruck
-          for (i = 1; i < nFarms; i++)
-            if (production[i] > 0 && production[i] <= capacity[rTruck])
-          {
+            //cout << "remove\n";
+            // Quitar nodo
+            rTruck = int_rand(1, nTrucks);
+            // La ruta siempre tiene el nodo de origen y destino
+            if (actualRoutes[rTruck].size() > 2)
             {
-              availableF[nAvailableF] = i;
-              nAvailableF +=1;
-            }
-          }
-          // cout << " add for 1 \n";
-          // Si el tamaño de la lista es mayor a 0 escojer una granja al azar
-          if (nAvailableF > 0)
-          {
-            r = int_rand(0, nAvailableF);
-            rFarm = availableF[r];
-            // Actualizar newRoutes, añadiendo rFarm a la posicion con menor costo
-            if (int(actualRoutes[rTruck].size() == 2))
-            {
-              newRoutes[rTruck].insert(newRoutes[rTruck].begin() + 1, rFarm);
-            }
-            else
-            {
-              minDist = cost[ 0 ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][1] ];
-              minDistPos = 1;
-              for (i = 1; i < int(actualRoutes[rTruck].size() - 1); i++)
+              r = int_rand(1, actualRoutes[rTruck].size() - 1);
+              rFarm = actualRoutes[rTruck][r];
+              newRoutes[rTruck].erase(newRoutes[rTruck].begin() + r);
+              getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
+              if (feasible(newRealPrize, minPrize))
               {
-                if (i == int(actualRoutes[rTruck].size() - 2))
+                updt = true;
+              }
+              else
+              {
+                // Restaurar actualRealPrize
+                for (i = 1; i < nQualities; i++)
                 {
-                  dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ 0 ];
+                  newRealPrize[i] = actualRealPrize[i];
                 }
-                else
+                // Restaurar newRoutes
+                newRoutes[rTruck] = actualRoutes[rTruck];
+              }
+            }
+            //cout << "despues remove\n";
+          }
+          // Factibilidad del cambio
+          if (updt)
+          {
+            //cout << "update\n";
+            newQuality = eval(newRealPrize, minPrize, profit, cost, nTrucks, newRoutes);
+            p = exp((newQuality - actualQuality)/Temp);
+            Temp *= alpha;
+            if (p > float_rand(0,1))
+            {
+              // Actualizar actualQuality, actualRoutes, actualRealPrize
+              actualQuality = newQuality;
+              actualRoutes[rTruck] = newRoutes[rTruck];
+              for (i = 0; i < nQualities; i++)
+              {
+                actualRealPrize[i] = newRealPrize[i];
+              }
+
+              // actualizar production, capacity
+              getCapacity(capacity, oCap, oProd, actualRoutes, nTrucks);
+              getProduction(production, oProd, actualRoutes, nTrucks, nFarms);
+
+              // Checkear actualquality con bestQuality
+              if (bestQuality < actualQuality)
+              {
+                //cout << "Instancia: " << in << ", itRes: " << itRes << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
+                //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
+                bestQuality = actualQuality;
+                bestRoutes[rTruck] = actualRoutes[rTruck];
+                for (i = 1; i < nQualities; i++)
                 {
-                  dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i+1] ];
-                }
-                if (dist < minDist)
-                {
-                  minDist = dist;
-                  minDistPos = i+1;
+                  bestRealPrize[i] = actualRealPrize[i];
                 }
               }
-              newRoutes[rTruck].insert(newRoutes[rTruck].begin() + minDistPos, rFarm);
-            }
-            // Nueva cantidad de recolección por calidad
-            getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-            if (feasible(newRealPrize, minPrize))
-            {
-              updt = true;
             }
             else
             {
@@ -772,131 +882,79 @@ int main()
               }
               // Restaurar newRoutes
               newRoutes[rTruck] = actualRoutes[rTruck];
-            }
+            } 
+            //cout << "despues update\n";
           }
+        }
+        // Mejores soluciones cada 100 resets
+        if (itRes % w == 0)
+        {
+          bestSolutions.push_back(bestQuality);
+        }
+      }
+      
+      // Guardar mejor solución  actual en archivo
+
+      //Calcular loadQuality final
+      getLoadQuality(loadQuality, farmQuality, actualRoutes, nTrucks);
+
+      //Calcular distancia final
+      measureDist(distance, nTrucks, bestRoutes, cost);
+
+      // Calcular la mejor mezcla en planta final
+      bestBlend(finalPrize, bestRealPrize, minPrize);
+
+      // Escribir mejor solución
+      outFile << "\n** SA ** nReset: " << nRes << "  nIt: " << nIt << endl;
+      outFile << "Quality: " << bestQuality << "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
+      outFile << "Routes / Distance / Load" << endl;
+      for (i = 1; i < nTrucks; i++)
+      {
+        if (bestRoutes[i].size() != 0)
+        { 
+          outFile << "Truck " << i << " Q" << loadQuality[i] << " ";
+          for (j = 0; j < int(bestRoutes[i].size()); j++)
+          {
+            if (bestRoutes[i][j] == origin)
+            {
+              if (j == 0)
+              {
+                outFile << origin << "-";
+              }
+              else
+              {
+                outFile << origin << " " << distance[i] << " " << oCap[i] - capacity[i] << endl;
+              } 
+            }
+            else
+            {
+              outFile << bestRoutes[i][j] << "-";
+            } 
+          }
+        }
+      }
+
+      // Mejores Soluciones
+      outFile << "Mejores soluciones cada " << w << " resets:\n";
+      for (i = 0; i < bestSolutions.size(); i++)
+      {
+        if (i == 0)
+        {
+          outFile << bestSolutions[i];
         }
         else
         {
-          //cout << "remove\n";
-          // Quitar nodo
-          rTruck = int_rand(1, nTrucks);
-          // La ruta siempre tiene el nodo de origen y destino
-          if (actualRoutes[rTruck].size() > 2)
-          {
-            r = int_rand(1, actualRoutes[rTruck].size() - 1);
-            rFarm = actualRoutes[rTruck][r];
-            newRoutes[rTruck].erase(newRoutes[rTruck].begin() + r);
-            getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-            if (feasible(newRealPrize, minPrize))
-            {
-              updt = true;
-            }
-            else
-            {
-              // Restaurar actualRealPrize
-              for (i = 1; i < nQualities; i++)
-              {
-                newRealPrize[i] = actualRealPrize[i];
-              }
-              // Restaurar newRoutes
-              newRoutes[rTruck] = actualRoutes[rTruck];
-            }
-          }
-          //cout << "despues remove\n";
-        }
-        // Factibilidad del cambio
-        if (updt)
-        {
-          //cout << "update\n";
-          newQuality = eval(newRealPrize, minPrize, profit, cost, nTrucks, newRoutes);
-          p = exp((newQuality - actualQuality)/Temp);
-          Temp *= alpha;
-          if (p > float_rand(0,1))
-          {
-            // Actualizar actualQuality, actualRoutes, actualRealPrize
-            actualQuality = newQuality;
-            actualRoutes[rTruck] = newRoutes[rTruck];
-            for (i = 0; i < nQualities; i++)
-            {
-              actualRealPrize[i] = newRealPrize[i];
-            }
-
-            // actualizar production, capacity
-            getCapacity(capacity, oCap, oProd, actualRoutes, nTrucks);
-            getProduction(production, oProd, actualRoutes, nTrucks, nFarms);
-
-            // Checkear actualquality con bestQuality
-            if (bestQuality < actualQuality)
-            {
-              //cout << "Instancia: " << in << ", itRes: " << itRes << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
-              //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
-              bestQuality = actualQuality;
-              bestRoutes[rTruck] = actualRoutes[rTruck];
-              for (i = 1; i < nQualities; i++)
-              {
-                bestRealPrize[i] = actualRealPrize[i];
-              }
-            }
-          }
-          else
-          {
-            // Restaurar actualRealPrize
-            for (i = 1; i < nQualities; i++)
-            {
-              newRealPrize[i] = actualRealPrize[i];
-            }
-            // Restaurar newRoutes
-            newRoutes[rTruck] = actualRoutes[rTruck];
-          } 
-          //cout << "despues update\n";
+          outFile << " - " << bestSolutions[i];
         }
       }
-    }
-    
-    // Guardar solución en archivo
+      outFile << endl;
+      
 
-    //Calcular loadQuality final
-    getLoadQuality(loadQuality, farmQuality, actualRoutes, nTrucks);
-
-    //Calcular distancia final
-    measureDist(distance, nTrucks, bestRoutes, cost);
-
-    // Calcular la mejor mezcla en planta final
-    bestBlend(finalPrize, bestRealPrize, minPrize);
-
-    // Escribir solución
-    outFile << "\n** SA ** nReset: " << nRes << ", nIt: " << nIt << endl;
-    outFile << "Q: " << actualQuality << ", Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
-    outFile << "Routes / Distance / Load" << endl;
-    for (i = 1; i < nTrucks; i++)
-    {
-      if (bestRoutes[i].size() != 0)
-      { 
-        outFile << "Truck " << i << " Q" << loadQuality[i] << " ";
-        for (j = 0; j < int(bestRoutes[i].size()); j++)
-        {
-          if (bestRoutes[i][j] == origin)
-          {
-            if (j == 0)
-            {
-              outFile << origin << "-";
-            }
-            else
-            {
-              outFile << origin << " " << distance[i] << " " << oCap[i] - capacity[i] << endl;
-            } 
-          }
-          else
-          {
-            outFile << bestRoutes[i][j] << "-";
-          } 
-        }
-      }
+      finish = std::chrono::high_resolution_clock::now();
+      elapsed = finish - start;
+      outFile << "Elapsed time: " << elapsed.count() << " s\n";
     }
 
-    finish = std::chrono::high_resolution_clock::now();
-    elapsed = finish - start;
-    outFile << "Elapsed time: " << elapsed.count() << " s\n";
     outFile.close();
   }
   summary.close();
