@@ -721,6 +721,7 @@ int main()
             r = int_rand(0, nAvailableF);
             rFarm = availableF[r];
             // Actualizar newRoutes, añadiendo rFarm a la posicion con menor costo
+            cout << " antes ";
             if (int(actualRoutes[rTruck].size() == 2))
             {
               newRoutes[rTruck].insert(newRoutes[rTruck].begin() + 1, rFarm);
@@ -729,16 +730,17 @@ int main()
             {
               minDist = cost[ 0 ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i] ];
               minDistPos = 1;
-              // cout << " antes add for 2 \n";
               for (i = 1; i < int(actualRoutes[rTruck].size() - 1); i++)
               {
                 if (i == int(actualRoutes[rTruck].size() - 2))
                 {
-                  dist = cost[ actualRoutes[i][rTruck] ][ rFarm ] + cost[ rFarm ][ 0 ];
+                  dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ 0 ];
                 }
                 else
                 {
-                  dist = cost[ actualRoutes[i][rTruck] ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i+1] ];
+                  cout << " 1.5 ";
+                  dist = cost[ actualRoutes[rTruck][i] ][ rFarm ] + cost[ rFarm ][ actualRoutes[rTruck][i+1] ];
+                  cout << " 1.6 ";
                 }
                 if (dist < minDist)
                 {
@@ -746,7 +748,7 @@ int main()
                   minDistPos = i+1;
                 }
               }
-              // cout << " add for 2 \n";
+              cout << " add for despues \n";
               newRoutes[rTruck].insert(newRoutes[rTruck].begin() + minDistPos, rFarm);
             }
             // Nueva cantidad de recolección por calidad
