@@ -14,14 +14,15 @@ using namespace std;
 #define srand48(x) srand((int)(x))
 #define drand48() ((double)rand()/RAND_MAX)
 
+int realAll = 0;
 int realInstance = 1;
 int iniS = 0, finS = 5;
 int Seed;
 int randLength = 5;
-float addP = 0.2;
-int nRes = 2500, nIt = 4000;
+float addP = 0.20;
+int nRes = 5000, nIt = 10000;
 int w = 200;
-float alpha = 0.997;
+float alpha = 0.9995;
 float T0 = 10000;
 int ini = 1, fin = 6;
 
@@ -351,20 +352,32 @@ int main()
 {
   ofstream summary;
   summary.open("outputs/summary.txt");
-  
+  ifstream inFile;
+  if (realAll == 1)
+  {
+    ini = 1;
+    fin = 2;
+  }
   int in;
   for (in = ini; in < fin; in++){
-    cout << "Instancia: " << in << endl;
 
-    ifstream inFile;
-    if (realInstance == 1)
+    cout << "Instancia: " << in << endl;
+    if (realAll == 1)
     {
-      inFile.open("MCWSB/Real instances/5clusters.dat." + to_string(in));
+      inFile.open("MCWSB/Real instances/ALL.dat.1");
     }
     else
     {
-      inFile.open("MCWSB/Instances/instancia" + to_string(in) + ".mcsb");
+      if (realInstance == 1)
+      {
+        inFile.open("MCWSB/Real instances/5clusters.dat." + to_string(in));
+      }
+      else
+      {
+        inFile.open("MCWSB/Instances/instancia" + to_string(in) + ".mcsb");
+      }
     }
+    
 
     string line;
     string word;
@@ -479,7 +492,7 @@ int main()
 
     // Beneficio por calidad de leche
 
-    float profit [nQualities] = {0, 1, 0.7, 0.3};
+    float profit [nQualities] = {0, 0.03, 0.021, 0.009};
 
     // LLegar hasta #producción
     while (inFile >> word)
@@ -546,13 +559,20 @@ int main()
     // Record start time
     auto start = std::chrono::high_resolution_clock::now();
     ofstream outFile;
-    if (realInstance == 1)
+    if (realAll == 1)
     {
-      outFile.open ("outputsReal/" + to_string(in) + ".txt");
+      outFile.open("outputsReal/ALL.txt");
     }
     else
     {
-      outFile.open ("outputs/" + to_string(in) + ".txt");
+      if (realInstance == 1)
+      {
+        outFile.open ("outputsReal/" + to_string(in) + ".txt");
+      }
+      else
+      {
+        outFile.open ("outputs/" + to_string(in) + ".txt");
+      }
     }
 
     outFile << "Instance " << in << "  nF: " << nFarms - 1 << "  nT: " << nTrucks - 1 << "  Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl;
