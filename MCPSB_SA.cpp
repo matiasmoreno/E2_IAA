@@ -16,15 +16,34 @@ using namespace std;
 
 int realAll = 0;
 int realInstance = 1;
+int ini = 1, fin = 6;
 int iniS = 0, finS = 5;
-int Seed;
 int randLength = 5;
-float addP = 0.20;
 int nRes = 5000, nIt = 10000;
 int w = 200;
-float alpha = 0.9995;
 float T0 = 10000;
-int ini = 1, fin = 6;
+float alpha = 0.9995;
+float addP = 0.20;
+int Seed;
+// Primera instancia de prueba
+// 0 1 2 0 5 5 1000 2000 10000 0.995 0.2
+// Todas las instancias reales
+// 1 1 6 0 5 5 5000 10000 10000 0.9995 0.2
+
+
+void Capture_Params(int argc, char **argv){
+    realInstance = atoi(argv[1]);
+    ini = atoi(argv[2]);
+    fin = atoi(argv[3]);
+    iniS = atoi(argv[4]);
+    finS = atoi(argv[5]);
+    randLength = atoi(argv[6]);
+    nRes = atoi(argv[7]);
+    nIt = atoi(argv[8]);
+    T0 = atof(argv[9]);
+    alpha = atof(argv[10]);
+    addP = atof(argv[11]);
+}
 
 float float_rand(float a, float b) {
     float retorno = 0;
@@ -39,11 +58,6 @@ float float_rand(float a, float b) {
 
     return retorno;
 }
-
-void Capture_Params(int argc, char **argv){
-    Seed = atoi(argv[1]);
-}
-
 int int_rand(int a, int b){
     int retorno = 0;
 
@@ -348,8 +362,9 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
 
 // int argc, char** argv
 // Capture_Params(argc,argv); */
-int main()
+int main(int argc, char** argv)
 {
+  Capture_Params(argc,argv);
   ofstream summary;
   summary.open("outputs/summary.txt");
   ifstream inFile;
