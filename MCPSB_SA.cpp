@@ -7,6 +7,8 @@
 #include <bits/stdc++.h>
 #include <chrono>  // for high_resolution_clock
 #include <math.h>       /* exp */
+#include <vector>
+#include <algorithm>
 using namespace std;
 
 // Random integers generator
@@ -58,6 +60,7 @@ float float_rand(float a, float b) {
 
     return retorno;
 }
+
 int int_rand(int a, int b){
     int retorno = 0;
 
@@ -76,8 +79,6 @@ int int_rand(int a, int b){
     }
     return retorno;
 }
-
-// Mejor mezcla
 
 void getRealPrize(int realPrize[], vector <int> routes[], int nTrucks, int nQualities, int oProd[], int farmQuality[])
 {
@@ -138,8 +139,6 @@ void bestBlend(int finalPrize[], int realPrize[], int minPrize[])
   }
 }
 
-
-
 void getCapacity(int capacity[], int oCap[], int oProd[], vector <int> routes[], int nTrucks){
   int i, j;
   for (i = 1; i < nTrucks; i++)
@@ -151,6 +150,7 @@ void getCapacity(int capacity[], int oCap[], int oProd[], vector <int> routes[],
     }
   }
 }
+
 void getProduction(int production[], int oProd[], vector <int> routes[], int nTrucks, int nFarms){
   int i, j;
   for (i = 0; i < nFarms; i++)
@@ -166,6 +166,7 @@ void getProduction(int production[], int oProd[], vector <int> routes[], int nTr
     }
   }
 }
+
 void getLoadQuality(int loadQuality[], int farmQuality[], vector <int> routes[], int nTrucks){
   int i, j, minQ;
   for (i = 1; i < nTrucks; i++)
@@ -181,8 +182,6 @@ void getLoadQuality(int loadQuality[], int farmQuality[], vector <int> routes[],
     loadQuality[i] = minQ;
   }
 }
-
-// Calculo de distancias
 
 void measureDist(int distance[], int nTrucks, vector <int> routes[], int **cost)
 {
@@ -213,12 +212,10 @@ void measureDist(int distance[], int nTrucks, vector <int> routes[], int **cost)
 }
 
 // Funcion de factibilidad
-bool feasible(int realPrize[], int minPrize[])
+bool feasible(int realPrize[], int minPrize[], vector <int> routes[], int nTrucks)
 {
-  /* cout << "Real: " << realPrize[1] << " " << realPrize[2] << " " << realPrize[3] << " " << endl;
-  cout << "Min: " << minPrize[1] << " " << minPrize[2] << " " << minPrize[3] << " " << endl; */
-  
-  int av2, av3;
+  // Factibilidad en recolección mínima
+  int av2, av3, i, j;
   // Checkear factibilidad en calidad 1
   if (realPrize[1] < minPrize[1])
   {
@@ -242,14 +239,27 @@ bool feasible(int realPrize[], int minPrize[])
       }
     }
   }
+ 
+  // Factibilidad en nodos repetidos
+  std::vector<int> visited;
+  for ( i = 0; i < nTrucks; i++)
+  {
+    for ( j = 1; j < int(routes[i].size()) - 1; j++)
+    {
+      if (std::find(visited.begin(), visited.end(), routes[i][j]) != visited.end())
+        return false;
+      else
+        visited.push_back(routes[i][j]);
+    }
+  }
+
   return true;
 }
 
-// Funcion de evaluación
 float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTrucks, vector <int> routes[])
 {
   float quality = 0;
-  int finalPrize[4], diff, i;
+  int finalPrize[4], i;
   bestBlend(finalPrize, realPrize, minPrize);
   
   for (i = 1; i < 4; i++)
@@ -850,7 +860,7 @@ int main(int argc, char** argv)
               }
               // Nueva cantidad de recolección por calidad
               getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-              if (feasible(newRealPrize, minPrize))
+              if (feasible(newRealPrize, minPrize, newRoutes, nTrucks))
               {
                 updt = true;
               }
@@ -878,7 +888,7 @@ int main(int argc, char** argv)
               rFarm = actualRoutes[rTruck][r];
               newRoutes[rTruck].erase(newRoutes[rTruck].begin() + r);
               getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-              if (feasible(newRealPrize, minPrize))
+              if (feasible(newRealPrize, minPrize, newRoutes, nTrucks))
               {
                 updt = true;
               }
