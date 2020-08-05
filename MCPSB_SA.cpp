@@ -26,7 +26,7 @@ int w = 200;
 float T0 = 10000;
 float alpha = 0.9995;
 float addP = 0.20;
-float swapP = 0.40;
+float swapP = 0.60;
 int Seed;
 
 void Capture_Params(int argc, char **argv){
@@ -41,6 +41,7 @@ void Capture_Params(int argc, char **argv){
     T0 = atof(argv[9]);
     alpha = atof(argv[10]);
     addP = atof(argv[11]);
+    swapP = atof(argv[12]);
 }
 
 float float_rand(float a, float b) {
@@ -210,8 +211,26 @@ void measureDist(int distance[], int nTrucks, vector <int> routes[], int **cost)
 // Funcion de factibilidad
 bool feasible(int realPrize[], int minPrize[], vector <int> routes[], int nTrucks)
 {
-  // Factibilidad en recolección mínima
   int av2, av3, i, j;
+
+  // Factibilidad en nodos repetidos
+  std::vector<int> visited;
+  for ( i = 0; i < nTrucks; i++)
+  {
+    for ( j = 1; j < int(routes[i].size()) - 1; j++)
+    {
+      if (std::find(visited.begin(), visited.end(), routes[i][j]) != visited.end()){
+        cout << "Nodo Repetido!!" << endl;
+        return false; 
+      }
+      else{
+        visited.push_back(routes[i][j]);
+      }
+    }
+  }
+
+  // Factibilidad en recolección mínima
+
   // Checkear factibilidad en calidad 1
   if (realPrize[1] < minPrize[1])
   {
@@ -236,19 +255,6 @@ bool feasible(int realPrize[], int minPrize[], vector <int> routes[], int nTruck
     }
   }
  
-  // Factibilidad en nodos repetidos
-  std::vector<int> visited;
-  for ( i = 0; i < nTrucks; i++)
-  {
-    for ( j = 1; j < int(routes[i].size()) - 1; j++)
-    {
-      if (std::find(visited.begin(), visited.end(), routes[i][j]) != visited.end())
-        return false;
-      else
-        visited.push_back(routes[i][j]);
-    }
-  }
-
   return true;
 }
 
@@ -378,7 +384,7 @@ int main(int argc, char** argv)
     lastInstance = 2;
   }
   int in;
-  for (in = firstSeed; in < lastSeed; in++){
+  for (in = firstInstance; in < lastInstance; in++){
     cout << "Instancia: " << in << endl;
     int nFarms, nTrucks, i, j, origin;
     
@@ -595,7 +601,7 @@ int main(int argc, char** argv)
 
     outFile << "Instance " << in << "  nF: " << nFarms - 1 << "  nT: " << nTrucks - 1 << "  Min 1-2-3: " << minPrize[1] << "-" << minPrize[2] << "-" << minPrize[3] << endl;
     
-    for (Seed = iniS; Seed < finS; Seed++)
+    for (Seed = firstSeed; Seed < lastSeed; Seed++)
     {
       start = std::chrono::high_resolution_clock::now();
       outFile << endl << "Seed " << Seed << endl;
@@ -756,64 +762,62 @@ int main(int argc, char** argv)
       std::chrono::duration<double> elapsed = finish - start;
       outFile << "Elapsed time: " << elapsed.count() << " s\n";
       
-      // *******************
-      // Simulated annealing
-      // *******************
-
-      start = std::chrono::high_resolution_clock::now();
-
       float bestQuality = actualQuality, newQuality;
 
       // realPrize
       int bestRealPrize [nQualities];
-      for (i = 0; i < nQualities; i++)
-      {
-        bestRealPrize[i] = actualRealPrize[i];
-      }
       int newRealPrize [nQualities];
       for (i = 0; i < nQualities; i++)
       {
+        bestRealPrize[i] = actualRealPrize[i];
         newRealPrize[i] = actualRealPrize[i];
       }
 
       // Rutas
       
       vector <int> bestRoutes[nTrucks];
-      for (i = 1; i < nTrucks; i++)
-      {
-        bestRoutes[i] = actualRoutes[i];
-      }
       vector <int> newRoutes[nTrucks];
       for (i = 1; i < nTrucks; i++)
       {
+        bestRoutes[i] = actualRoutes[i];
         newRoutes[i] = bestRoutes[i];
       }
+
+      // ******************************************************************************************************************
+      // ******************************************************************************************************************
+      // Simulated annealing
+      // ******************************************************************************************************************
+      // ******************************************************************************************************************
+
+
+      start = std::chrono::high_resolution_clock::now();
+
 
       // Iterador SA
       
       int itRes, it, r, rFarm, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos;
-      float p, alpha = 0.995, add;
+      float p, alpha = 0.995, operatorP;
       float Temp;
       bool updt;
       vector <float> bestSolutions;
-      for (itRes = 0; itRes < nRes; itRes++)
+      for (itRes = 0; itRes < nResets; itRes++)
       {
         Temp = T0;
-        for (it = 0; it < nIt; it++)
+        for (it = 0; it < nIterations; it++)
         {
-          nAvailableF = 0;
           updt = false;
+          operatorP = float_rand(0,1);
 
-          // Añadir o Quitar granja
-          add = float_rand(0,1);
-          if (addP > add)
+          // Operador Add
+          if (addP > operatorP)
           {
             // Añadir nodo factible
             rTruck = int_rand(1, nTrucks);
             // Generar una lista de granjas factibles para la capacidad de rTruck
+            nAvailableF = 0;
             for (i = 1; i < nFarms; i++)
-              if (production[i] > 0 && production[i] <= capacity[rTruck])
             {
+              if ((production[i] > 1) && (oProd[i] <= capacity[rTruck]))
               {
                 availableF[nAvailableF] = i;
                 nAvailableF +=1;
@@ -870,8 +874,16 @@ int main(int argc, char** argv)
               }
             }
           }
+          /*
+          else if (swapP > operatorP){
+            // Operador Swap
+          }
+          */
+
           else
           {
+            // Operador Drop
+
             //cout << "remove\n";
             // Quitar nodo
             rTruck = int_rand(1, nTrucks);
@@ -899,6 +911,7 @@ int main(int argc, char** argv)
             }
             //cout << "despues remove\n";
           }
+
           // Factibilidad del cambio
           if (updt)
           {
@@ -910,7 +923,11 @@ int main(int argc, char** argv)
             {
               // Actualizar actualQuality, actualRoutes, actualRealPrize
               actualQuality = newQuality;
-              actualRoutes[rTruck] = newRoutes[rTruck];
+
+              for (i = 1; i < nTrucks; i++){
+                actualRoutes[i] = newRoutes[i];
+              }
+
               for (i = 0; i < nQualities; i++)
               {
                 actualRealPrize[i] = newRealPrize[i];
@@ -925,8 +942,14 @@ int main(int argc, char** argv)
               {
                 //cout << "Instancia: " << in << ", itRes: " << itRes << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
                 //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
+                
                 bestQuality = actualQuality;
+
                 bestRoutes[rTruck] = actualRoutes[rTruck];
+                for (i = 1; i < nTrucks; i++){
+                  bestRoutes[i] = actualRoutes[i];
+                }
+                
                 for (i = 1; i < nQualities; i++)
                 {
                   bestRealPrize[i] = actualRealPrize[i];
@@ -967,7 +990,7 @@ int main(int argc, char** argv)
       bestBlend(finalPrize, bestRealPrize, minPrize);
 
       // Escribir mejor solución
-      outFile << "\n** SA ** nReset: " << nRes << "  nIt: " << nIt << endl;
+      outFile << "\n** SA ** nReset: " << nResets << "  nIt: " << nIterations << endl;
       outFile << "Quality: " << bestQuality << "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
       outFile << "Routes / Distance / Load" << endl;
       for (i = 1; i < nTrucks; i++)
