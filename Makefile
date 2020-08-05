@@ -2,7 +2,10 @@ flags=-Wno-deprecated -g -ggdb
 comp=g++
 prog=MCPSB_SA
 
+#Primera instancia de prueba
 PARAMS = 0 1 2 0 5 5 1000 2000 10000 0.995 0.2
+#Todas las instancias reales
+#PARAMS = 1 1 6 0 5 5 5000 10000 10000 0.9995 0.2
 
 debug=0
 

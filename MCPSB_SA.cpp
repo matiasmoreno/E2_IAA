@@ -1,12 +1,12 @@
-// Entrega 2 IAA - Matias Moreno - 201673508-9
+// Entrega 3 IAA - Matias Moreno - 201673508-9
 
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
 #include <string>
 #include <bits/stdc++.h>
-#include <chrono>  // for high_resolution_clock
-#include <math.h>       /* exp */
+#include <chrono> 
+#include <math.h>    
 #include <vector>
 #include <algorithm>
 using namespace std;
@@ -18,30 +18,26 @@ using namespace std;
 
 int realAll = 0;
 int realInstance = 1;
-int ini = 1, fin = 6;
-int iniS = 0, finS = 5;
+int firstInstance = 1, lastInstance = 6;
+int firstSeed = 0, lastSeed = 5;
 int randLength = 5;
-int nRes = 5000, nIt = 10000;
+int nResets = 5000, nIterations = 10000;
 int w = 200;
 float T0 = 10000;
 float alpha = 0.9995;
 float addP = 0.20;
+float swapP = 0.40;
 int Seed;
-// Primera instancia de prueba
-// 0 1 2 0 5 5 1000 2000 10000 0.995 0.2
-// Todas las instancias reales
-// 1 1 6 0 5 5 5000 10000 10000 0.9995 0.2
-
 
 void Capture_Params(int argc, char **argv){
     realInstance = atoi(argv[1]);
-    ini = atoi(argv[2]);
-    fin = atoi(argv[3]);
-    iniS = atoi(argv[4]);
-    finS = atoi(argv[5]);
+    firstInstance = atoi(argv[2]);
+    lastInstance = atoi(argv[3]);
+    firstSeed = atoi(argv[4]);
+    lastSeed = atoi(argv[5]);
     randLength = atoi(argv[6]);
-    nRes = atoi(argv[7]);
-    nIt = atoi(argv[8]);
+    nResets = atoi(argv[7]);
+    nIterations = atoi(argv[8]);
     T0 = atof(argv[9]);
     alpha = atof(argv[10]);
     addP = atof(argv[11]);
@@ -256,6 +252,7 @@ bool feasible(int realPrize[], int minPrize[], vector <int> routes[], int nTruck
   return true;
 }
 
+// Función de evaluación
 float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTrucks, vector <int> routes[])
 {
   float quality = 0;
@@ -370,21 +367,24 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
   randFarm = pickFarm[int_rand(0, l)];
 }
 
-// int argc, char** argv
-// Capture_Params(argc,argv); */
+//Main
 int main(int argc, char** argv)
 {
   Capture_Params(argc,argv);
   ifstream inFile;
   if (realAll == 1)
   {
-    ini = 1;
-    fin = 2;
+    firstInstance = 1;
+    lastInstance = 2;
   }
   int in;
-  for (in = ini; in < fin; in++){
-
+  for (in = firstSeed; in < lastSeed; in++){
     cout << "Instancia: " << in << endl;
+    int nFarms, nTrucks, i, j, origin;
+    
+    string line;
+    string word;
+
     if (realAll == 1)
     {
       inFile.open("MCWSB/Real instances/ALL.dat.1");
@@ -400,12 +400,6 @@ int main(int argc, char** argv)
         inFile.open("MCWSB/Instances/instancia" + to_string(in) + ".mcsb");
       }
     }
-    
-
-    string line;
-    string word;
-    
-    int nFarms, nTrucks, i, j, origin;
 
     // Obtener nodo origin
 
@@ -465,6 +459,7 @@ int main(int argc, char** argv)
 
     int capacity [nTrucks], oCap [nTrucks], position [nTrucks], loadQuality [nTrucks], production [nFarms], oProd [nFarms], farmQuality [nFarms];
     int **cost;
+
     cost = new int *[nFarms];
     for(i = 0; i < nFarms; i++)
     {
@@ -761,7 +756,10 @@ int main(int argc, char** argv)
       std::chrono::duration<double> elapsed = finish - start;
       outFile << "Elapsed time: " << elapsed.count() << " s\n";
       
+      // *******************
       // Simulated annealing
+      // *******************
+
       start = std::chrono::high_resolution_clock::now();
 
       float bestQuality = actualQuality, newQuality;
@@ -1023,37 +1021,3 @@ int main(int argc, char** argv)
   }
  return 0;
 }
-// Trabajar siempre en factibilidad
-
-// Quitar load del calculo en cada paso y calcularlo al final
-// Inicializar todos los camiones saliendo y llegando al origen, limpiar las rutas que solo tengan origen al finalizar
-// Solo es necesario manejar realPrize para factibilidad y calidad
-// No se usa actualPrize en SA y finalPrize solo se usa para calcular la mejor combinación
-
-// Simulated Annealing
-// Tomar solución inicial
-// Tirar moneda, sacar o añadir
-
-// Sacar: Toma un camion al azar y le quita un nodo al azar
-// Si el camion no tiene ruta se repite (while)
-// Revisar factibilidad para efectuar cambio
-// Se obtiene la diferencia en calidad de solucion
-// Si el cambio es positivo se saca de inmediato y se modifica la solucion
-// Si el cambio es negativo se evalua con la temperatura
-// Al sacar un nodo se modifica la solución
-// Se restaura la produccion del nodo, la carga del camion, (la capacidad)
-// La ruta del camion se modifica quitando el nodo y conectando los nodos sueltos
-
-// Añadir: Tomar una ruta y añadir un nodo factible (de igual o mayor calidad, respetando capacidad)
-// Si el cambio es positivo se añade de inmediato y se modifica la solucion
-// Si el cambio es negativo se evalua con la temperatura
-
-// Para checkear factibilidad se revisa si realPrize puede satisfacer las demandas minimas (feasible)
-// Para calcular calidad se encuentra la mejor combinacion de mezcla en planta de realPrize (BestBlend)
-// Despues de cada cambio, comparar calidad actual con la mejor encontrada y actualizar
-// BestSolQuality, BestRoutes
-
-// Para las instancias pequeñas
-// Repetir 1000 veces y tomar tiempo
-// Repetir 10000 veces y tomar tiempo
-// Repetir 100000 veces y tomar tiempo
