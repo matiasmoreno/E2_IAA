@@ -375,8 +375,6 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
 int main(int argc, char** argv)
 {
   Capture_Params(argc,argv);
-  ofstream summary;
-  summary.open("outputs/summary.txt");
   ifstream inFile;
   if (realAll == 1)
   {
@@ -763,8 +761,6 @@ int main(int argc, char** argv)
       std::chrono::duration<double> elapsed = finish - start;
       outFile << "Elapsed time: " << elapsed.count() << " s\n";
       
-      summary << to_string(in) << " " << nFarms << " " << nTrucks << " " << actualQuality << " " << elapsed.count() << endl; 
-      
       // Simulated annealing
       start = std::chrono::high_resolution_clock::now();
 
@@ -1025,7 +1021,6 @@ int main(int argc, char** argv)
 
     outFile.close();
   }
-  summary.close();
  return 0;
 }
 // Trabajar siempre en factibilidad
