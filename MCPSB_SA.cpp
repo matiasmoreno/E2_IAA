@@ -388,15 +388,19 @@ int main(int argc, char** argv)
     cout << "Instancia: " << in << endl;
     int nFarms, nTrucks, i, j, origin;
     
+    cout << "1" << endl;
     string line;
     string word;
+    cout << "2" << endl;
 
     if (realAll == 1)
     {
+      cout << "3" << endl;
       inFile.open("MCWSB/Real instances/ALL.dat.1");
     }
     else
     {
+      cout << "4" << endl;
       if (realInstance == 1)
       {
         inFile.open("MCWSB/Real instances/5clusters.dat." + to_string(in));
@@ -406,15 +410,16 @@ int main(int argc, char** argv)
         inFile.open("MCWSB/Instances/instancia" + to_string(in) + ".mcsb");
       }
     }
-
+    cout << "5" << endl;
     // Obtener nodo origin
 
     while (inFile >> word)
     {
+      cout << "6" << endl;
       if (word == "-")
       {
         inFile >> word;
-        cout << word << endl;
+        cout << "7" << endl;
         origin = stoi(word);
         break;
       }
