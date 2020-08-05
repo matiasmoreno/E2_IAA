@@ -41,7 +41,7 @@ void Capture_Params(int argc, char **argv){
     T0 = atof(argv[9]);
     alpha = atof(argv[10]);
     addP = atof(argv[11]);
-    // swapP = atof(argv[12]);
+    swapP = atof(argv[12]);
 }
 
 float float_rand(float a, float b) {
@@ -414,6 +414,7 @@ int main(int argc, char** argv)
       if (word == "-")
       {
         inFile >> word;
+        cout << word << endl;
         origin = stoi(word);
         break;
       }
@@ -491,6 +492,7 @@ int main(int argc, char** argv)
     {
       // Capacidad
       inFile >> word;
+      cout << word << endl;
       capacity[i] = stoi(word);
       oCap[i] = stoi(word);
       // N° Camion o ;
@@ -508,6 +510,7 @@ int main(int argc, char** argv)
         for (int i = 1; i < nQualities; i++)
         {
           inFile >> word;
+          cout << word << endl;
           minPrize[i] = stoi(word);
         }
         break;
@@ -538,10 +541,12 @@ int main(int argc, char** argv)
     {
       // Produccion
       inFile >> word;
+      cout << word << endl;
       production[i] = stoi(word);
       oProd[i] = stoi(word);
       // Calidad
       inFile >> word;
+      cout << word << endl;
       farmQuality[i] = stoi(word);
       // N° granja ;
       inFile >> word;
@@ -573,6 +578,7 @@ int main(int argc, char** argv)
         }
         else
         {
+          cout << word << endl;
           cost[i][j] = stoi(word);
         }
       }
