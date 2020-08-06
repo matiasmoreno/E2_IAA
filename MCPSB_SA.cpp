@@ -209,24 +209,9 @@ void measureDist(int distance[], int nTrucks, vector <int> routes[], int **cost)
 }
 
 // Funcion de factibilidad
-bool feasible(int realPrize[], int minPrize[], vector <int> routes[], int nTrucks)
+bool feasible(int realPrize[], int minPrize[], vector <int> routes[])
 {
   int av2, av3, i, j;
-
-  // Factibilidad en nodos repetidos
-  std::vector<int> visited;
-  for ( i = 0; i < nTrucks; i++)
-  {
-    for ( j = 1; j < int(routes[i].size()) - 1; j++)
-    {
-      if (std::find(visited.begin(), visited.end(), routes[i][j]) != visited.end()){
-        return false; 
-      }
-      else{
-        visited.push_back(routes[i][j]);
-      }
-    }
-  }
 
   // Factibilidad en recolección mínima
 
@@ -857,7 +842,7 @@ int main(int argc, char** argv)
               }
               // Nueva cantidad de recolección por calidad
               getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-              if (feasible(newRealPrize, minPrize, newRoutes, nTrucks))
+              if (feasible(newRealPrize, minPrize, newRoutes))
               {
                 updt = true;
               }
@@ -893,7 +878,7 @@ int main(int argc, char** argv)
               rFarm = actualRoutes[rTruck][r];
               newRoutes[rTruck].erase(newRoutes[rTruck].begin() + r);
               getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-              if (feasible(newRealPrize, minPrize, newRoutes, nTrucks))
+              if (feasible(newRealPrize, minPrize, newRoutes))
               {
                 updt = true;
               }
