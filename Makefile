@@ -6,7 +6,7 @@ prog=MCPSB_SA
 #Primera instancia de prueba
 #PARAMS = 0 1 2 0 1 5 3000 5000 10000 0.995 0.2 0.6
 #Todas las instancias reales
-PARAMS = 1 1 2 0 1 5 6000 6000 10000 0.999 0.2 0.6
+PARAMS = 1 1 6 0 5 5 5000 10000 200 0.999 0.25 0.6
 
 debug=0
 
