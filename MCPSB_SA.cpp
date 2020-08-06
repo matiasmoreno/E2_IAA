@@ -396,21 +396,23 @@ int main(int argc, char** argv)
     if (realAll == 1)
     {
       cout << "3" << endl;
-      inFile.open("MCPSB/Real_instances/instanciaALL.mcsb");
+      inFile.open("MCPSB/Real_Instances/instanciaALL.mcsb");
     }
     else
     {
       cout << "4" << endl;
       if (realInstance == 1)
       {
-        inFile.open("MCPSB/Real_instances/instancia" + to_string(in) + ".mcsb");
-        cout << "4 test" << endl;
+        inFile.open("MCPSB/Real_Instances/instancia" + to_string(in) + ".mcsb");
       }
       else
       {
         inFile.open("MCPSB/Instances/instancia" + to_string(in) + ".mcsb");
-        cout << "4 real" << endl;
       }
+    }
+    if (inFile.is_open()) 
+    { 
+      cout << "opened" << endl; 
     }
     cout << "5" << endl;
     // Obtener nodo origin
