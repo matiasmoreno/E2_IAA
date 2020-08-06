@@ -22,7 +22,7 @@ int firstInstance = 1, lastInstance = 6;
 int firstSeed = 0, lastSeed = 5;
 int randLength = 5;
 int nResets = 5000, nIterations = 10000;
-int w = 200;
+int w = 1;
 float T0 = 10000;
 float alpha = 1;
 float addP = 0.20;
@@ -282,7 +282,7 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
 int getTopRandomExternalFarm(vector <int> routes[], int **cost, int production[], int oProd [], int farmQuality[], int T, int rFarm, int nTrucks, int nFarms, int nQualities, int randLenght, float profit[], int capacity[], vector<int> iQualityFarms[], int origin){
   int j, k, loadQ = 1;
   // Obtener calidad de la mezcla en el camion T
-  for (j = 1; j < routes[T].size() - 1; j++)
+  for (j = 1; j < int(routes[T].size() - 1); j++)
   {
     if (farmQuality[ routes[T][j] ] > loadQ)
     {
