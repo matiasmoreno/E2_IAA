@@ -404,10 +404,12 @@ int main(int argc, char** argv)
       if (realInstance == 1)
       {
         inFile.open("MCPSB/Real_instances/instancia" + to_string(in) + ".mcsb");
+        cout << "4 test" << endl;
       }
       else
       {
         inFile.open("MCPSB/Instances/instancia" + to_string(in) + ".mcsb");
+        cout << "4 real" << endl;
       }
     }
     cout << "5" << endl;
