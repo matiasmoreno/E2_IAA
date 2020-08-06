@@ -220,7 +220,6 @@ bool feasible(int realPrize[], int minPrize[], vector <int> routes[], int nTruck
     for ( j = 1; j < int(routes[i].size()) - 1; j++)
     {
       if (std::find(visited.begin(), visited.end(), routes[i][j]) != visited.end()){
-        cout << "Nodo Repetido!!" << endl;
         return false; 
       }
       else{
@@ -388,19 +387,15 @@ int main(int argc, char** argv)
     cout << "Instancia: " << in << endl;
     int nFarms, nTrucks, i, j, origin;
     
-    cout << "1" << endl;
     string line;
     string word;
-    cout << "2" << endl;
 
     if (realAll == 1)
     {
-      cout << "3" << endl;
       inFile.open("MCPSB/Real_Instances/instanciaALL.mcsb");
     }
     else
     {
-      cout << "4" << endl;
       if (realInstance == 1)
       {
         inFile.open("MCPSB/Real_Instances/instancia" + to_string(in) + ".mcsb");
@@ -410,20 +405,14 @@ int main(int argc, char** argv)
         inFile.open("MCPSB/Instances/instancia" + to_string(in) + ".mcsb");
       }
     }
-    if (inFile.is_open()) 
-    { 
-      cout << "opened" << endl; 
-    }
-    cout << "5" << endl;
+
     // Obtener nodo origin
 
     while (inFile >> word)
     {
-      cout << "6" << endl;
       if (word == "-")
       {
         inFile >> word;
-        cout << "7" << endl;
         origin = stoi(word);
         break;
       }
@@ -501,7 +490,6 @@ int main(int argc, char** argv)
     {
       // Capacidad
       inFile >> word;
-      cout << word << endl;
       capacity[i] = stoi(word);
       oCap[i] = stoi(word);
       // N° Camion o ;
@@ -519,7 +507,6 @@ int main(int argc, char** argv)
         for (int i = 1; i < nQualities; i++)
         {
           inFile >> word;
-          cout << word << endl;
           minPrize[i] = stoi(word);
         }
         break;
@@ -550,12 +537,10 @@ int main(int argc, char** argv)
     {
       // Produccion
       inFile >> word;
-      cout << word << endl;
       production[i] = stoi(word);
       oProd[i] = stoi(word);
       // Calidad
       inFile >> word;
-      cout << word << endl;
       farmQuality[i] = stoi(word);
       // N° granja ;
       inFile >> word;
@@ -587,7 +572,6 @@ int main(int argc, char** argv)
         }
         else
         {
-          cout << word << endl;
           cost[i][j] = stoi(word);
         }
       }
