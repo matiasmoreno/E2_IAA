@@ -396,14 +396,14 @@ int main(int argc, char** argv)
     if (realAll == 1)
     {
       cout << "3" << endl;
-      inFile.open("MCPSB/Real instances/ALL.dat.1");
+      inFile.open("MCPSB/Real_instances/instanciaALL.mcsb");
     }
     else
     {
       cout << "4" << endl;
       if (realInstance == 1)
       {
-        inFile.open("MCPSB/Real instances/5clusters.dat." + to_string(in));
+        inFile.open("MCPSB/Real_instances/instancia" + to_string(in) + ".mcsb");
       }
       else
       {
