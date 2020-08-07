@@ -243,7 +243,7 @@ bool feasible(int realPrize[], int minPrize[], vector <int> routes[])
 }
 
 // Función de evaluación
-float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTrucks, vector <int> routes[])
+float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTrucks, vector <int> routes[], float& income, float& cost)
 {
   float quality = 0;
   int finalPrize[4], i;
@@ -253,6 +253,7 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
   {
     quality += finalPrize[i] * profit[i];
   }
+  income = quality;
   // Costo de rutas
   for (i = 1; i < nTrucks; i++)
   {
@@ -275,6 +276,7 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
       }
     }
   }
+  cost = income - quality;
   return quality;
 }
 
@@ -781,12 +783,12 @@ int main(int argc, char** argv)
 
       // Beneficio por valor de leche
       int finalPrize[4];
-      float actualQuality;
+      float actualQuality, bestIncome, bestCost, newIncome, newCost;
 
       getRealPrize(actualRealPrize, actualRoutes, nTrucks, nQualities, oProd, farmQuality);
       bestBlend(finalPrize, actualRealPrize, minPrize);
       getCapacity(capacity, oCap, oProd, actualRoutes, nTrucks);
-      actualQuality = eval(actualRealPrize, minPrize, profit, cost, nTrucks, actualRoutes);
+      actualQuality = eval(actualRealPrize, minPrize, profit, cost, nTrucks, actualRoutes, bestIncome, bestCost);
 
       // Distancia de transporte y calidad de carga
       int distance [nTrucks];
@@ -795,7 +797,7 @@ int main(int argc, char** argv)
 
       // Escribir solución
           
-      outFile << "** GRASP **  Q: " << actualQuality << "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
+      outFile << "** GRASP **  Q: " << actualQuality << ", Income: " << bestIncome << ", Cost: " << bestCost << "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
       outFile << "Routes / Distance / Load" << endl;
       for (i = 1; i < nTrucks; i++)
       {
@@ -1007,7 +1009,7 @@ int main(int argc, char** argv)
           if (updt)
           {
             //cout << "update\n";
-            newQuality = eval(newRealPrize, minPrize, profit, cost, nTrucks, newRoutes);
+            newQuality = eval(newRealPrize, minPrize, profit, cost, nTrucks, newRoutes, newIncome, newCost);
             p = exp((newQuality - actualQuality)/Temp);
             /*
             if (it % 50 == 0)
@@ -1041,6 +1043,8 @@ int main(int argc, char** argv)
                 //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
                 
                 bestQuality = actualQuality;
+                bestCost = newCost;
+                bestIncome = newCost;
 
                 bestRoutes[rTruck] = actualRoutes[rTruck];
                 for (i = 1; i < nTrucks; i++){
@@ -1070,7 +1074,7 @@ int main(int argc, char** argv)
         if (itRes % w == 0)
         {
           bestSolutions.push_back(bestQuality);
-          cout << "Reset: " << itRes << ", bestQuality: " << bestQuality << endl;
+          cout << "Reset: " << itRes << ", bestQuality: " << bestQuality << ", Income: " << bestIncome << ", Cost: " << bestCost <<  endl;
         }
       }
       
@@ -1089,7 +1093,7 @@ int main(int argc, char** argv)
 
       // Escribir mejor solución
       outFile << "\n** SA ** nReset: " << nResets << "  nIt: " << nIterations << endl;
-      outFile << "Quality: " << bestQuality << "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
+      outFile << "Quality: " << bestQuality << ", Income: " << bestIncome << ", Cost: " << bestCost <<  "  Prize (1-2-3): " << finalPrize[1] << " " << finalPrize[2] << " " << finalPrize[3] << endl;
       outFile << "Routes / Distance / Load" << endl;
       for (i = 1; i < nTrucks; i++)
       {
