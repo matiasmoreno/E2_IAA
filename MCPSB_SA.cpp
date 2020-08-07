@@ -22,7 +22,7 @@ int firstInstance = 1, lastInstance = 6;
 int firstSeed = 0, lastSeed = 5;
 int randLength = 5;
 int nResets = 5000, nIterations = 10000;
-int w = 1;
+int w = 50;
 float T0 = 10000;
 float alpha = 1;
 float addP = 0.20;
@@ -1070,6 +1070,7 @@ int main(int argc, char** argv)
         if (itRes % w == 0)
         {
           bestSolutions.push_back(bestQuality);
+          cout << "Reset: " << itRes << ", bestQuality: " << bestQuality << endl;
         }
       }
       
