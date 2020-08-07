@@ -243,7 +243,7 @@ bool feasible(int realPrize[], int minPrize[], vector <int> routes[])
 }
 
 // Función de evaluación
-float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTrucks, vector <int> routes[], float& income, float& cost)
+float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTrucks, vector <int> routes[], float& actualIncome, float& actualCost)
 {
   float quality = 0;
   int finalPrize[4], i;
@@ -253,7 +253,7 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
   {
     quality += finalPrize[i] * profit[i];
   }
-  income = quality;
+  actualIncome = quality;
   // Costo de rutas
   for (i = 1; i < nTrucks; i++)
   {
@@ -276,7 +276,7 @@ float eval(int realPrize[], int minPrize[], float profit[], int ** cost, int nTr
       }
     }
   }
-  cost = income - quality;
+  actualCost = actualIncome - quality;
   return quality;
 }
 
@@ -1044,7 +1044,7 @@ int main(int argc, char** argv)
                 
                 bestQuality = actualQuality;
                 bestCost = newCost;
-                bestIncome = newCost;
+                bestIncome = newIncome;
 
                 bestRoutes[rTruck] = actualRoutes[rTruck];
                 for (i = 1; i < nTrucks; i++){
