@@ -42,6 +42,7 @@ void Capture_Params(int argc, char **argv){
     alpha = atof(argv[10]);
     addP = atof(argv[11]);
     swapP = atof(argv[12]);
+    w = atoi(argv[13]);
 }
 
 float float_rand(float a, float b) {
