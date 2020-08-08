@@ -946,31 +946,34 @@ int main(int argc, char** argv)
             // Operador Swap
             // usar funcion, darle rutas, camion y nodo
             rTruck = int_rand(1, nTrucks);
-            rFarm = int_rand(1, actualRoutes[rTruck].size() - 1);
-            rFarmExternal = getTopRandomExternalFarm(actualRoutes, cost, production, oProd, farmQuality, rTruck, rFarm, nTrucks, nFarms, nQualities, randLength, profit, capacity, iQualityFarms, origin);
-
-            if (rFarmExternal != 0)
+            // Se puede hacer swap solo si existe un nodo presente
+            if (int(actualRoutes[rTruck].size()) > 2)
             {
-              newRoutes[rTruck][rFarm] = rFarmExternal;
+              rFarm = int_rand(1, actualRoutes[rTruck].size() - 1);
+              rFarmExternal = getTopRandomExternalFarm(actualRoutes, cost, production, oProd, farmQuality, rTruck, rFarm, nTrucks, nFarms, nQualities, randLength, profit, capacity, iQualityFarms, origin);
 
-              // Nueva cantidad de recolección por calidad
-              getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
-              if (feasible(newRealPrize, minPrize, newRoutes))
+              if (rFarmExternal != 0)
               {
-                updt = true;
-              }
-              else
-              {
-                // Restaurar actualRealPrize
-                for (i = 1; i < nQualities; i++)
+                newRoutes[rTruck][rFarm] = rFarmExternal;
+
+                // Nueva cantidad de recolección por calidad
+                getRealPrize(newRealPrize, newRoutes, nTrucks, nQualities, oProd, farmQuality);
+                if (feasible(newRealPrize, minPrize, newRoutes))
                 {
-                  newRealPrize[i] = actualRealPrize[i];
+                  updt = true;
                 }
-                // Restaurar newRoutes
-                newRoutes[rTruck] = actualRoutes[rTruck];
+                else
+                {
+                  // Restaurar actualRealPrize
+                  for (i = 1; i < nQualities; i++)
+                  {
+                    newRealPrize[i] = actualRealPrize[i];
+                  }
+                  // Restaurar newRoutes
+                  newRoutes[rTruck] = actualRoutes[rTruck];
+                }
               }
             }
-            
           }
 
           else
@@ -981,7 +984,7 @@ int main(int argc, char** argv)
             // Quitar nodo
             rTruck = int_rand(1, nTrucks);
             // La ruta siempre tiene el nodo de origen y destino
-            if (actualRoutes[rTruck].size() > 2)
+            if (int(actualRoutes[rTruck].size()) > 2)
             {
               r = int_rand(1, actualRoutes[rTruck].size() - 1);
               rFarm = actualRoutes[rTruck][r];
