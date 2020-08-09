@@ -874,9 +874,8 @@ int main(int argc, char** argv)
         for (it = 0; it < nIterations; it++)
         {
           //visualizar calidad de solucion actual
-          
-          //if ((nIterations/it * 10) % 1 == 0)
-          /*if ((it % (nIterations/10) == 0))
+          /*
+          if ((it % (nIterations/10) == 0))
           {
             cout << "Reset: " << itRes << "." << (it*10)/nIterations << ", Temp: " << Temp << ", actQ: " << actualQuality << endl;
           }*/
@@ -1029,7 +1028,6 @@ int main(int argc, char** argv)
               cout << "itRes: " << itRes << ", it: " << it << ", diff: " << newQuality - actualQuality << ", Temp: " << Temp << ", p: " << p << endl;;
             }
             */
-            Temp *= alpha;
             if (p > float_rand(0,1))
             {
               // Actualizar actualQuality, actualRoutes, actualRealPrize
@@ -1081,6 +1079,7 @@ int main(int argc, char** argv)
             } 
             //cout << "despues update\n";
           }
+          Temp *= alpha;
         }
         // Mejores soluciones cada 100 resets
         if (itRes % w == 0)
