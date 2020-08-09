@@ -873,6 +873,14 @@ int main(int argc, char** argv)
         Temp = T0;
         for (it = 0; it < nIterations; it++)
         {
+          //visualizar calidad de solucion actual
+          
+          //if ((nIterations/it * 10) % 1 == 0)
+          /*if ((it % (nIterations/10) == 0))
+          {
+            cout << "Reset: " << itRes << "." << (it*10)/nIterations << ", Temp: " << Temp << ", actQ: " << actualQuality << endl;
+          }*/
+          
           updt = false;
           operatorP = float_rand(0,1);
 
