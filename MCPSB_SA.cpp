@@ -22,7 +22,7 @@ int firstInstance = 1, lastInstance = 6;
 int firstSeed = 0, lastSeed = 5;
 int randLength = 5;
 int nResets = 5000, nIterations = 10000;
-int w = 50;
+//int w = 50;
 float T0 = 10000;
 float alpha = 1;
 float addP = 0.20;
@@ -44,7 +44,7 @@ void Capture_Params(int argc, char **argv){
     addP = atof(argv[11]);
     swapP = atof(argv[12]);
     alphaCtrl = atof(argv[13]);
-    w = atoi(argv[14]);
+    //w = atoi(argv[14]);
 }
 
 float float_rand(float a, float b) {
@@ -1085,11 +1085,11 @@ int main(int argc, char** argv)
           Temp *= alpha;
         }
         // Mejores soluciones cada 100 resets
-        if (itRes % w == 0)
+        /*if (itRes % w == 0)
         {
           bestSolutions.push_back(bestQuality);
           cout << "Reset: " << itRes << ", bestQuality: " << bestQuality << ", Income: " << bestIncome << ", Cost: " << bestCost <<  endl;
-        }
+        }*/
       }
       
       // Guardar mejor solución  actual en archivo
@@ -1136,7 +1136,7 @@ int main(int argc, char** argv)
       }
 
       // Mejores Soluciones
-      outFile << "Mejores soluciones cada " << w << " resets:\n";
+      /*outFile << "Mejores soluciones cada " << w << " resets:\n";*/
       for (i = 0; i < int(bestSolutions.size()); i++)
       {
         if (i == 0)
