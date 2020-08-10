@@ -22,7 +22,7 @@ Se pueden manipular las semillas, las instancias y diferentes parametros para la
 | float **gamma** | Tasa de enfriamiento |
 | float **alpha** | Probabilidad de seleccionar movimiento Añadir en cada iteración |
 | float **beta** | Probabilidad de seleccionar movimiento Swap en cada iteración |
-| float **alphaC** | Probabilidad de seleccionar movimiento Swap en cada iteración |
+| float **alphaC** | Parámetro de control sobre parámetro **alpha** |
 
 Ejemplo de linea de ejecución para ejecutar solo la primera instancia de prueba:
 ```sh
