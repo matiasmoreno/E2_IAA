@@ -19,16 +19,17 @@ Se pueden manipular las semillas, las instancias y diferentes parametros para la
 | int **nResets** | Cantidad de reinicios de temperaruta |
 | int **nIterations** | Cantidad de iteraciones por cada reinicio |
 | float **T0** | Temperatura máxima del sistema |
-| float **alpha** | Tasa de enfriamiento |
-| float **addP** | Probabilidad de seleccionar movimiento Añadir en cada iteración |
-| float **swapP** | Probabilidad de seleccionar movimiento Swap en cada iteración |
+| float **gamma** | Tasa de enfriamiento |
+| float **alpha** | Probabilidad de seleccionar movimiento Añadir en cada iteración |
+| float **beta** | Probabilidad de seleccionar movimiento Swap en cada iteración |
+| float **alphaC** | Probabilidad de seleccionar movimiento Swap en cada iteración |
 
 Ejemplo de linea de ejecución para ejecutar solo la primera instancia de prueba:
 ```sh
-$ ./MCPSB_SA 0 1 2 0 5 5 1000 2000 10000 0.995 0.2 0.6
+$ ./MCPSB_SA 0 1 2 1 6 5 20 1000000 80 0.99999975 0.5 0.0 0.0
 ```
 
 Ejemplo de linea de ejecución para ejecutar todas las instancias reales:
 ```sh
-$ ./MCPSB_SA 1 1 6 0 5 5 5000 10000 10000 0.9995 0.2 0.6
+$ ./MCPSB_SA 1 1 6 1 6 5 50 16000000 80 0.99999975 0.5 0.0 0.0
 ```
