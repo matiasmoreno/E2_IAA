@@ -27,6 +27,7 @@ float T0 = 10000;
 float alpha = 1;
 float addP = 0.20;
 float swapP = 0.60;
+float alphaCtrl = 1;
 int Seed;
 
 void Capture_Params(int argc, char **argv){
@@ -42,7 +43,8 @@ void Capture_Params(int argc, char **argv){
     alpha = atof(argv[10]);
     addP = atof(argv[11]);
     swapP = atof(argv[12]);
-    w = atoi(argv[13]);
+    alphaCtrl = atof(argv[13]);
+    w = atoi(argv[14]);
 }
 
 float float_rand(float a, float b) {
@@ -865,7 +867,7 @@ int main(int argc, char** argv)
       
       int itRes, it, r, rFarm, rFarmExternal, rTruck, nAvailableF, availableF[nFarms], minDist, dist, minDistPos;
       float p, operatorP;
-      float Temp;
+      float Temp, addPm, capRatio;
       bool updt;
       vector <float> bestSolutions;
       for (itRes = 0; itRes < nResets; itRes++)
@@ -873,21 +875,24 @@ int main(int argc, char** argv)
         Temp = T0;
         for (it = 0; it < nIterations; it++)
         {
+          updt = false;
           //visualizar calidad de solucion actual
           /*
           if ((it % (nIterations/10) == 0))
           {
             cout << "Reset: " << itRes << "." << (it*10)/nIterations << ", Temp: " << Temp << ", actQ: " << actualQuality << endl;
           }*/
-          
-          updt = false;
+          //cout << "antes" << endl;
           operatorP = float_rand(0,1);
-
+          rTruck = int_rand(1, nTrucks);
+          // Control de parametro add, afectado por m y por capacidad restante de truck
+          capRatio = 1 - float(capacity[rTruck]) / float(oCap[rTruck]);
+          addPm = addP - (addP * alphaCtrl * capRatio);
+          //cout << "addPm: " <<addPm << endl;
           // Operador Add
-          if (addP > operatorP)
+          if (addPm > operatorP)
           {
             // Añadir nodo factible
-            rTruck = int_rand(1, nTrucks);
             // Generar una lista de granjas factibles para la capacidad de rTruck
             nAvailableF = 0;
             for (i = 1; i < nFarms; i++)
@@ -953,7 +958,6 @@ int main(int argc, char** argv)
           else if ((swapP + addP) > operatorP){
             // Operador Swap
             // usar funcion, darle rutas, camion y nodo
-            rTruck = int_rand(1, nTrucks);
             // Se puede hacer swap solo si existe un nodo presente
             if (int(actualRoutes[rTruck].size()) > 2)
             {
@@ -990,7 +994,6 @@ int main(int argc, char** argv)
 
             //cout << "remove\n";
             // Quitar nodo
-            rTruck = int_rand(1, nTrucks);
             // La ruta siempre tiene el nodo de origen y destino
             if (int(actualRoutes[rTruck].size()) > 2)
             {
