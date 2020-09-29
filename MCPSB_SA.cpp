@@ -27,6 +27,8 @@ float T0 = 80;
 float alpha = 1;
 float addP = 0.33;
 float swapP = 0.33;
+float dropP = 0.33;
+float sumaP = 1;
 float alphaCtrl = 0;
 int Seed;
 string path;
@@ -56,7 +58,8 @@ void Capture_Params(int argc, char **argv){
     alpha = atof(argv[5]);
     addP = atof(argv[6]);
     swapP = atof(argv[7]);
-    path = argv[8];
+    dropP = atof(argv[8]);
+    path = argv[9];
 }
 
 float float_rand(float a, float b) {
@@ -459,6 +462,12 @@ void miopeRand(int randLenght, int i, vector<int> iQualityFarms[], int T, int& r
 int main(int argc, char** argv)
 {
   Capture_Params(argc,argv);
+  sumaP = addP + swapP + dropP;
+  cout << "addP: " << addP << ", swapP: " << swapP << ", dropP: " << dropP << ", sumaP: " << sumaP << endl;
+  addP = addP/sumaP;
+  swapP = swapP/sumaP;
+  dropP = dropP/sumaP;
+  cout << "addP: " << addP << ", swapP: " << swapP << ", dropP: " << dropP << ", sumaP: " << sumaP << endl;
   ifstream inFile;
   /* if (realAll == 1)
   {
@@ -1007,9 +1016,6 @@ int main(int argc, char** argv)
       else
       {
         // Operador Drop
-
-        //cout << "remove\n";
-        // Quitar nodo
         // La ruta siempre tiene el nodo de origen y destino
         if (int(actualRoutes[rTruck].size()) > 2)
         {

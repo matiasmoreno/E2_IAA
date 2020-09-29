@@ -17,9 +17,10 @@ Se pueden manipular las semillas, las instancias y diferentes parametros para la
 | float **alpha** | Tasa de enfriamiento |
 | float **addP** | Probabilidad de seleccionar movimiento Añadir en cada iteración |
 | float **swapP** | Probabilidad de seleccionar movimiento Swap en cada iteración |
+| float **dropP** | Probabilidad de seleccionar movimiento Swap en cada iteración |
 | string **path** | Ruta del archivo de instancia |
 
 Ejemplo de linea de ejecución:
 ```sh
-$ ./MCPSB_SA 1 10 500000 80 0.99999 0.33 0.33 MCPSB/Real_Instances/instancia1.mcsb
+$ ./MCPSB_SA 1 10 500000 80 0.99999 0.33 0.33 0.33 MCPSB/Real_Instances/instancia1.mcsb
 ```
