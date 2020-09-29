@@ -1,30 +1,20 @@
-MCPSB/Real_Instances/instancia1.mcsb  nFarms: 126  nTrucks: 9  MinPrizeQuality 1-2-3: 35000-195000-15000
+MCPSB/Test_Instances/instancia3.mcsb  nFarms: 40  nTrucks: 4  MinPrizeQuality 1-2-3: 0-0-0
 
-Seed 1
-** GRASP **  Q: 2474.23, Income: 5693.23, Cost: 3219  PrizeCollected (1-2-3): 44296 195000 29928
+Seed 3858
+** GRASP **  Q: 0, Income: 0, Cost: 0  PrizeCollected (1-2-3): 0 0 0
 Truck N / Load Quality / Visited Farms / Distance / Total Load
-Truck 1 Q1 1000-67-46-13-103-124-1000 234 29837
-Truck 2 Q1 1000-115-43-91-85-94-1000 302 29974
-Truck 3 Q2 1000-23-47-83-107-125-86-1000 352 29977
-Truck 4 Q2 1000-44-98-2-89-11-74-1000 304 29990
-Truck 5 Q2 1000-5-41-92-77-32-113-122-1000 305 29881
-Truck 6 Q2 1000-14-68-71-56-20-80-119-1000 278 29870
-Truck 7 Q2 1000-26-65-17-101-59-116-62-50-29-38-1000 631 29842
-Truck 8 Q2 1000-104-110-8-95-53-35-49-16-40-34-1000 526 29925
-Truck 9 Q3 1000-57-3-15-30-12-126-117-1000 287 29928
-Elapsed time: 0.0005245 s
+Truck 1 Q1 80-80 0 0
+Truck 2 Q1 80-80 0 0
+Truck 3 Q1 80-80 0 0
+Truck 4 Q1 80-80 0 0
+Elapsed time: 0.0001001 s
 
-** SA ** nReset: 10  nIt: 500000
-Quality: 4499.59, Income: 5688.59, Cost: 1189  PrizeCollected (1-2-3): 44152 195000 29892
+** SA ** nReset: 10  nIt: 10000
+Quality: 0, Income: 0, Cost: 0  PrizeCollected (1-2-3): 0 0 0
 Truck N / Load Quality / Visited Farms / Distance / Total Load
-Truck 1 Q1 1000-124-22-115-97-121-1000 128 29727
-Truck 2 Q2 1000-26-110-104-46-4-1000 96 29909
-Truck 3 Q2 1000-14-116-23-103-32-80-65-77-1000 184 29922
-Truck 4 Q2 1000-125-107-44-98-2-38-1000 210 29846
-Truck 5 Q2 1000-101-71-41-5-68-1000 110 29931
-Truck 6 Q2 1000-83-13-56-109-20-1000 98 29996
-Truck 7 Q1 1000-28-70-16-1000 100 29839
-Truck 8 Q3 1000-123-102-82-69-9-1000 127 29892
-Truck 9 Q2 1000-73-92-47-50-1000 136 29982
+Truck 1 Q1 80-80 0 0
+Truck 2 Q1 80-80 0 0
+Truck 3 Q1 80-80 0 0
+Truck 4 Q1 80-80 0 0
 
-Elapsed time: 6.4407 s
+Elapsed time: 0.0021709 s
