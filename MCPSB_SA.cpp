@@ -463,11 +463,9 @@ int main(int argc, char** argv)
 {
   Capture_Params(argc,argv);
   sumaP = addP + swapP + dropP;
-  cout << "addP: " << addP << ", swapP: " << swapP << ", dropP: " << dropP << ", sumaP: " << sumaP << endl;
   addP = addP/sumaP;
   swapP = swapP/sumaP;
   dropP = dropP/sumaP;
-  cout << "addP: " << addP << ", swapP: " << swapP << ", dropP: " << dropP << ", sumaP: " << sumaP << endl;
   ifstream inFile;
   /* if (realAll == 1)
   {
@@ -476,7 +474,6 @@ int main(int argc, char** argv)
   }
   int in;
   for (in = firstInstance; in < lastInstance; in++){ */
-  // cout << path << endl;
   int nFarms, nTrucks, i, j, origin;
   int in = firstInstance;
   
@@ -699,7 +696,6 @@ int main(int argc, char** argv)
   Seed = firstSeed;
   start = std::chrono::high_resolution_clock::now();
   outFile << endl << "Seed " << Seed << endl;
-  //cout << "Seed " << Seed << endl;
   srand48(Seed);
 
   // Crear nTrucks vectores dinamicos para generar las rutas de cada camion
@@ -906,13 +902,11 @@ int main(int argc, char** argv)
       {
         cout << "Reset: " << itRes << "." << (it*10)/nIterations << ", Temp: " << Temp << ", actQ: " << actualQuality << endl;
       }*/
-      //cout << "antes" << endl;
       operatorP = float_rand(0,1);
       rTruck = int_rand(1, nTrucks);
       // Control de parametro add, afectado por m y por capacidad restante de truck
       /* capRatio = 1 - float(capacity[rTruck]) / float(oCap[rTruck]);
       addPm = addP - (addP * alphaCtrl * capRatio);
-      //cout << "addPm: " <<addPm << endl;
       // Operador Add
       if (addPm > operatorP) */
       if (addP > operatorP)
@@ -928,7 +922,6 @@ int main(int argc, char** argv)
             nAvailableF +=1;
           }
         }
-        // cout << " add for 1 \n";
         // Si el tamaño de la lista es mayor a 0 escojer una granja al azar
         if (nAvailableF > 0)
         {
@@ -1038,13 +1031,11 @@ int main(int argc, char** argv)
             newRoutes[rTruck] = actualRoutes[rTruck];
           }
         }
-        //cout << "despues remove\n";
       }
 
       // Factibilidad del cambio
       if (updt)
       {
-        //cout << "update\n";
         newQuality = eval(newRealPrize, minPrize, profit, cost, nTrucks, newRoutes, newIncome, newCost);
         p = exp((newQuality - actualQuality)/Temp);
         /*
@@ -1074,9 +1065,6 @@ int main(int argc, char** argv)
           // Checkear actualquality con bestQuality
           if (bestQuality < actualQuality)
           {
-            //cout << "Instancia: " << in << ", itRes: " << itRes << " bQuality Upd: " << bestQuality << " -> "<< actualQuality << endl;
-            //cout << "RP 1: " << bestRealPrize[1] << " -> "<< actualRealPrize[1] << ", RP 2: " << bestRealPrize[2] << " -> "<< actualRealPrize[2] << ", RP 3: " << bestRealPrize[3] << " -> "<< actualRealPrize[3] << endl;
-            
             bestQuality = actualQuality;
             bestCost = newCost;
             bestIncome = newIncome;
@@ -1102,7 +1090,6 @@ int main(int argc, char** argv)
           // Restaurar newRoutes
           newRoutes[rTruck] = actualRoutes[rTruck];
         } 
-        //cout << "despues update\n";
       }
       Temp *= alpha;
     }
